@@ -65,12 +65,12 @@ std::string Path::join(std::vector<std::string> components) {
   std::string result(*iter++);
 
   while (iter != components.end()) {
-    if (result.length() != 0 && result[result.length() - 1] != separator[0])
+    if (!result.empty() && result.back() != separator[0])
       result += separator[0];
 
     std::string component = *iter;
 
-    if (component.length() != 0 && component[0] == separator[0])
+    if (!component.empty() && component[0] == separator[0])
       result = component;
     else
       result += component;
