@@ -95,4 +95,5 @@ test-jsshell: $(out)/.jsshell.tested
 	@echo $@ \(ignored\)
 
 user.mk:
-	@echo $@ \(ignored\)
+	@echo Creating empty user.mk
+	@touch user.mk
