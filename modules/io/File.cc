@@ -353,7 +353,7 @@ namespace {
 
 void SetTimeval(struct timeval& tv, double time) {
   tv.tv_sec = static_cast<long>(time / 1000);
-  tv.tv_usec = static_cast<long>((time - tv.tv_sec * 1000) * 1000);
+  tv.tv_usec = static_cast<long>((time - tv.tv_sec * 1000.0) * 1000);
 }
 
 }
