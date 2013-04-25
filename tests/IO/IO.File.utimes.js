@@ -26,28 +26,54 @@ test([
 
     var atime = new Date("1980-03-17T12:13:14.123Z");
     var mtime = new Date("1980-03-17T13:14:15.234Z");
-    var stat;
+    var stat, subsecond_precision = true;
 
     IO.File.utimes("tests/output/utimes.txt", atime, mtime);
 
     stat = IO.File.stat("tests/output/utimes.txt");
 
-    assertEquals(atime.getTime(), stat.atime.getTime());
-    assertEquals(mtime.getTime(), stat.mtime.getTime());
+    if (atime.getTime() == stat.atime.getTime()) {
+      assertEquals(atime.getTime(), stat.atime.getTime());
+      assertEquals(mtime.getTime(), stat.mtime.getTime());
+    } else {
+      /* If the time isn't an exact match, allow it to be truncated to
+         whole seconds; not all file systems support sub-second file
+         times. */
+      assertEquals(1000 * Math.floor(atime.getTime() / 1000),
+		   stat.atime.getTime());
+      assertEquals(1000 * Math.floor(mtime.getTime() / 1000),
+		   stat.mtime.getTime());
+      subsecond_precision = false;
+    }
 
     IO.File.utimes("tests/output/utimes.txt", atime);
 
     stat = IO.File.stat("tests/output/utimes.txt");
 
-    assertEquals(atime.getTime(), stat.atime.getTime());
-    assertEquals(atime.getTime(), stat.mtime.getTime());
+    if (subsecond_precision) {
+      assertEquals(atime.getTime(), stat.atime.getTime());
+      assertEquals(atime.getTime(), stat.mtime.getTime());
+    } else {
+      assertEquals(1000 * Math.floor(atime.getTime() / 1000),
+		   stat.atime.getTime());
+      assertEquals(1000 * Math.floor(atime.getTime() / 1000),
+		   stat.mtime.getTime());
+    }
 
     IO.File.utimes("tests/output/utimes.txt");
 
     stat = IO.File.stat("tests/output/utimes.txt");
 
-    assertTrue(Math.abs(Date.now() - stat.atime.getTime()) < 100);
-    assertTrue(Math.abs(Date.now() - stat.mtime.getTime()) < 100);
+    var atime_delta = Math.abs(Date.now() - stat.atime.getTime());
+    var mtime_delta = Math.abs(Date.now() - stat.mtime.getTime());
+
+    if (subsecond_precision) {
+      assertTrue(atime_delta < 10);
+      assertTrue(mtime_delta < 10);
+    } else {
+      assertTrue(atime_delta < 1000);
+      assertTrue(mtime_delta < 1000);
+    }
 
     IO.File.unlink("tests/output/utimes.txt");
   }
