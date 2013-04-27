@@ -62,7 +62,7 @@ class Result::Instance : public api::Class::Instance<Result> {
 Result::Result()
     : api::Class("Result", this) {
   AddMethod<Result>("apply", &apply);
-  AddMethod<Result>("discard", &discard);
+  AddMethod<Result>("close", &close);
   AddProperty<Result>("length", &get_length);
   AddIndexedHandler<Result>(&query, &get);
 }
@@ -85,25 +85,25 @@ Result* Result::FromContext(v8::Handle<v8::Context> context) {
 std::vector<base::Variant> Result::apply(Result::Instance* instance,
                                          base::Function callback) {
   if (!instance->result())
-    throw base::TypeError("access to discarded result-set");
+    throw base::TypeError("access to closed result-set");
 
   return ApplyResult(instance->connection(), instance->result(),
                      instance->types(), callback);
 }
 
-void Result::discard(Result::Instance* instance) {
+void Result::close(Result::Instance* instance) {
   instance->Discard();
 }
 
 unsigned Result::get_length(Result::Instance* instance) {
   if (!instance->result())
-    throw base::TypeError("access to discarded result-set");
+    throw base::TypeError("access to closed result-set");
   return PQntuples(instance->result());
 }
 
 Row::Instance* Result::get(Result::Instance* instance, std::uint32_t index) {
   if (!instance->result())
-    throw base::TypeError("access to discarded result-set");
+    throw base::TypeError("access to closed result-set");
   if (index >= static_cast<decltype(index)>(PQntuples(instance->result())))
     return NULL;
   Row* cls = PostgreSQL::FromContext()->row();
@@ -120,7 +120,7 @@ Row::Instance* Result::get(Result::Instance* instance, std::uint32_t index) {
 
 unsigned Result::query(Result::Instance* instance, std::uint32_t index) {
   if (!instance->result())
-    throw base::TypeError("access to discarded result-set");
+    throw base::TypeError("access to closed result-set");
   if (index >= static_cast<decltype(index)>(PQntuples(instance->result())))
     return base::PropertyFlags::kNotFound;
   return base::PropertyFlags::kEnumerable;

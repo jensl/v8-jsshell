@@ -50,7 +50,7 @@ class Result : public api::Class {
 
   static std::vector<base::Variant> apply(Result::Instance* instance,
                                           base::Function callback);
-  static void discard(Result::Instance* instance);
+  static void close(Result::Instance* instance);
 
   static unsigned get_length(Result::Instance* instance);
 
