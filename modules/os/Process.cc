@@ -20,6 +20,7 @@
 #include "Base.h"
 #include "modules/os/Process.h"
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -94,6 +95,7 @@ Process::Process(const Features& features)
   AddClassFunction<Process>("fork", fork);
   AddClassFunction<Process>("getenv", getenv);
   AddClassFunction<Process>("sleep", sleep);
+  AddClassFunction<Process>("exit", exit);
 
   AddClassFunction<Process>("getrlimit", getrlimit);
   AddClassFunction<Process>("setrlimit", setrlimit);
@@ -357,7 +359,8 @@ void Process::start(Instance* instance) {
       int errnum = errno;
 
       perror("execve() failed");
-      exit(errnum);
+
+      ::exit(errnum);
     }
 
     instance->pid = getpid();
@@ -556,6 +559,10 @@ double Process::sleep(Process*, double time) {
   }
 
   return 0;
+}
+
+void Process::exit(Process*, int returncode) {
+  ::exit(returncode);
 }
 
 namespace {

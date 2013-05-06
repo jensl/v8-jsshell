@@ -75,6 +75,7 @@ class Process : public api::Class {
   static int fork(Process*);
   static std::string getenv(Process*, std::string name);
   static double sleep(Process*, double time);
+  static void exit(Process*, int returncode);
 
   static base::Object getrlimit(Process*, std::string name);
   static void setrlimit(Process*, std::string name, std::int64_t soft,

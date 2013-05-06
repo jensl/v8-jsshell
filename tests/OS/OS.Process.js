@@ -127,6 +127,19 @@ test([
     var after = Date.now();
 
     assertTrue(Math.abs(200 - (after - before)) < 10);
+  },
+
+  function () {
+    var process = new OS.Process();
+
+    process.start();
+
+    if (process.isSelf)
+      OS.Process.exit(17);
+
+    process.wait();
+
+    assertEquals(17, process.exitStatus);
   }
 ]);
 
