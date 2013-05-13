@@ -81,4 +81,12 @@ assertEquals('"bytes"', format("%r", Bytes.encode("bytes")));
 
 assertEquals("[%]", format("[%%]"));
 
+/* Regression tests: */
+
+/* Single formatting directive (other than a plain %s) resulting in more than
+   1024 characters of output used to be broken.  Primarily a problem with %r,
+   since it can easily result in large amounts of output. */
+var long = (new Array(1024)).join("0123456789");
+assertEquals('"' + long + '"', format("%r", long));
+
 endScope();

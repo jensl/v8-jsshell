@@ -137,7 +137,11 @@ std::string Formatter::Replace(std::string directive,
     if (written < length)
       break;
 
-    bufferp = new char[written + 1];
+    if (bufferp != buffer)
+      delete[] bufferp;
+
+    length = written + 1;
+    bufferp = new char[length];
   } while (true);
 
   std::string result(bufferp, written);
