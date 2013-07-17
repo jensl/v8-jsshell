@@ -83,7 +83,7 @@ v8: $(v8)/build/gyp
 	@$(MAKE) -C $(v8) $(v8flags) $(v8flavor)
 
 clean:
-	@rm -f $(out)
+	@rm -rf $(out)
 
 test-jsshell: $(out)/.jsshell.tested
 
