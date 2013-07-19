@@ -33,7 +33,7 @@ Variant Function::Call(Object this_object,
     this_object = v8::Context::GetCurrent()->Global();
 
   v8::HandleScope handle_scope;
-  v8::Local<v8::Function> function(v8::Function::Cast(*object_.handle()));
+  v8::Local<v8::Function> function(object_.handle().As<v8::Function>());
 
   std::vector<v8::Handle<v8::Value>> arguments;
 

@@ -46,16 +46,16 @@ class Object {
     void Release();
 
    private:
-    v8::Persistent<v8::Object> handle_;
+    mutable v8::Persistent<v8::Object> handle_;
   };
 
   Object();
 
   template <typename Type>
-  Object(v8::Handle<Type> object);
+  Object(v8::Local<Type> object);
 
   template <typename Type>
-  Object(v8::Local<Type> object);
+  Object(const v8::Persistent<Type>& object);
 
   static base::Object Create();
 
@@ -104,7 +104,7 @@ class Object {
   friend class Variant;
   friend class Persistent;
 
-  v8::Handle<v8::Object> handle_;
+  v8::Local<v8::Object> handle_;
 };
 
 template <typename Class>

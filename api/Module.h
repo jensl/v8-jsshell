@@ -57,6 +57,11 @@ class Module {
   int index_;
   std::string name_;
 
+  v8::Local<v8::FunctionTemplate> function_template() {
+    return v8::Local<v8::FunctionTemplate>::New(
+      v8::Isolate::GetCurrent(), template_);
+  }
+
   v8::Persistent<v8::FunctionTemplate> template_;
 };
 

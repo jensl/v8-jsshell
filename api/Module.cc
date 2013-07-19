@@ -30,8 +30,8 @@ Module::~Module() {
 Module::Module(int index, std::string name)
     : index_(index)
     , name_(name)
-    , template_(v8::FunctionTemplate::New()) {
-  template_->SetClassName(v8::String::New(name.c_str(), name.length()));
+    , template_(v8::Isolate::GetCurrent(), v8::FunctionTemplate::New()) {
+  function_template()->SetClassName(v8::String::New(name.c_str(), name.length()));
 }
 
 void Module::AddToRuntime(Runtime& runtime) {
@@ -44,7 +44,7 @@ void Module::ExtendRuntime(Runtime& runtime) {
 }
 
 base::Object Module::GetObject() {
-  return template_->GetFunction();
+  return function_template()->GetFunction();
 }
 
 void Module::AddTo(base::Object target) {

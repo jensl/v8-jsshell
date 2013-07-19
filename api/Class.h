@@ -56,14 +56,20 @@ class Class {
         base::Object object);
 
    protected:
+    v8::Local<v8::Object> object() {
+      return v8::Local<v8::Object>::New(v8::Isolate::GetCurrent(), object_);
+    }
+
     v8::Persistent<v8::Object> object_;
 
    private:
-    static void CleanUp(v8::Isolate*, v8::Persistent<v8::Value>,
-			void* parameter);
+    static void CleanUp(v8::Isolate*, v8::Persistent<v8::Object>*,
+			Instance<ActualClass>* parameter);
   };
 
-  v8::Local<v8::Context> context() { return *context_; }
+  v8::Local<v8::Context> context() {
+    return v8::Local<v8::Context>::New(v8::Isolate::GetCurrent(), context_);
+  }
 
   bool HasInstance(base::Object object);
 
@@ -126,6 +132,11 @@ class Class {
  private:
   Class(std::string name, const glue::ConstructorGlue& glue);
 
+  v8::Local<v8::FunctionTemplate> function_template() {
+    return v8::Local<v8::FunctionTemplate>::New(
+      v8::Isolate::GetCurrent(), template_);
+  }
+
   v8::Persistent<v8::Context> context_;
   v8::Persistent<v8::FunctionTemplate> template_;
   std::string name_;
@@ -151,19 +162,19 @@ base::Object Class::Instance<ActualClass>::GetObject() {
 
 template <typename ActualClass>
 void Class::Instance<ActualClass>::SetObject(base::Object object) {
-  object_ = v8::Persistent<v8::Object>::New(v8::Isolate::GetCurrent(),
-					    object.handle());
+  object_.Reset(v8::Isolate::GetCurrent(), object.handle());
   object_.MakeWeak(v8::Isolate::GetCurrent(), this, &CleanUp);
 }
 
 template <typename ActualClass>
 ActualClass* Class::Instance<ActualClass>::GetClass() {
-  return ActualClass::FromContext(object_->CreationContext());
+  return ActualClass::FromContext(object()->CreationContext());
 }
 
 template <typename ActualClass>
 void Class::Instance<ActualClass>::CleanUp(
-    v8::Isolate*, v8::Persistent<v8::Value>, void* parameter) {
+    v8::Isolate*, v8::Persistent<v8::Object>*,
+    Instance<ActualClass>* parameter) {
   Class::Instance<ActualClass>* instance =
       static_cast<Class::Instance<ActualClass>*>(parameter);
   instance->object_.Dispose(v8::Isolate::GetCurrent());
@@ -199,7 +210,7 @@ void Class::AddMethod(
     std::string name,
     Result (*callback)(typename ActualClass::Instance*, Arguments ...)) {
   glue::MethodGlue(static_cast<ActualClass*>(this), callback)
-      .AddTo(name, template_->PrototypeTemplate());
+      .AddTo(name, function_template()->PrototypeTemplate());
 }
 
 
@@ -207,7 +218,7 @@ template <typename ActualClass, typename Result, typename ... Arguments>
 void Class::AddClassFunction(
     std::string name, Result (*callback)(ActualClass*, Arguments ...)) {
   glue::FunctionGlue(static_cast<ActualClass*>(this), callback)
-      .AddTo(name, template_->GetFunction());
+      .AddTo(name, function_template()->GetFunction());
 }
 
 template <typename ActualClass>
@@ -289,7 +300,7 @@ void Class::AddProperty(std::string name,
   };
 
   (new Wrapper(static_cast<ActualClass*>(this), getter, setter))->AddTo(
-      name, template_);
+      name, function_template());
 }
 
 template <typename ActualClass, typename Type>
@@ -411,7 +422,7 @@ void Class::AddNamedHandler(
   Wrapper* wrapper = new Wrapper(static_cast<ActualClass*>(this), list, query,
                                  getter, setter);
 
-  template_->InstanceTemplate()->SetNamedPropertyHandler(
+  function_template()->InstanceTemplate()->SetNamedPropertyHandler(
       &Wrapper::getter,
       setter ? &Wrapper::setter : NULL,
       &Wrapper::query,
@@ -506,7 +517,7 @@ void Class::AddIndexedHandler(
   Wrapper* wrapper = new Wrapper(static_cast<ActualClass*>(this), getter,
                                  setter, flags);
 
-  template_->InstanceTemplate()->SetIndexedPropertyHandler(
+  function_template()->InstanceTemplate()->SetIndexedPropertyHandler(
       &Wrapper::getter,
       setter ? &Wrapper::setter : NULL,
       &Wrapper::query,
@@ -549,7 +560,7 @@ void Class::AddClassProperty(std::string name,
     Getter getter_;
   };
 
-  template_->GetFunction()->SetAccessor(
+  function_template()->GetFunction()->SetAccessor(
       v8::String::New(name.c_str(), name.length()),
       &Wrapper::getter,
       NULL,

@@ -182,7 +182,7 @@ std::string Variant::AsString() const {
 }
 
 base::Object Variant::AsObject() const {
-  v8::Handle<v8::Object> handle(handle_->ToObject());
+  v8::Local<v8::Object> handle(handle_->ToObject());
   if (handle.IsEmpty())
     throw NestedException();
   return base::Object(handle);

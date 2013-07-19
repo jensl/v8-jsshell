@@ -30,13 +30,13 @@
 namespace base {
 
 template <typename Type>
-Object::Object(v8::Handle<Type> handle)
-    : handle_(v8::Local<v8::Object>::New(handle)) {
+Object::Object(v8::Local<Type> handle)
+    : handle_(handle) {
 }
 
 template <typename Type>
-Object::Object(v8::Local<Type> handle)
-    : handle_(v8::Local<v8::Object>::New(handle)) {
+Object::Object(const v8::Persistent<Type>& handle)
+    : handle_(v8::Local<v8::Object>::New(v8::Isolate::GetCurrent(), handle)) {
 }
 
 template <typename ValueType>

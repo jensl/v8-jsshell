@@ -25,7 +25,7 @@ v8static ?= no
 
 ifeq ($(v8static),yes)
 v8lib ?= $(v8)/out/$(v8flavor)/obj.target/tools/gyp
-v8objects ?= $(v8lib)/libv8_base.a $(v8lib)/libv8_snapshot.a
+v8objects ?= $(v8lib)/*.a
 else
 v8flags ?= library=shared
 v8lib ?= $(v8)/out/$(v8flavor)/lib.target
@@ -68,7 +68,7 @@ $(objects): $(out)/obj/%.o: %.cc Makefile user.mk $(fragments)
 $(out)/jsshell: v8 $(common_objects) $(jsshell_objects)
 	@echo LINK\( jsshell \)
 	@mkdir -p $(out)
-	@$(linker) $(lflags) -o $@ $(common_objects) $(jsshell_objects) $(v8objects) $(libraries:%=-l%)
+	@$(linker) $(lflags) -o $@ $(common_objects) $(jsshell_objects) $(wildcard $(v8objects)) $(libraries:%=-l%)
 
 $(out)/.jsshell.tested: $(out)/jsshell $(wildcard tests/*.js)
 	@rm -rf tests/output
@@ -84,6 +84,7 @@ v8: $(v8)/build/gyp
 
 clean:
 	@rm -rf $(out)
+	@$(MAKE) -C $(v8) clean
 
 test-jsshell: $(out)/.jsshell.tested
 

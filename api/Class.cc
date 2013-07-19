@@ -28,11 +28,11 @@ Class::~Class() {
 }
 
 bool Class::HasInstance(base::Object object) {
-  return template_->HasInstance(object.handle());
+  return function_template()->HasInstance(object.handle());
 }
 
 void Class::AddTo(base::Object target) {
-  target.Put(name_, template_->GetFunction());
+  target.Put(name_, function_template()->GetFunction());
 }
 
 void Class::AddTo(Module& module) {
@@ -40,7 +40,7 @@ void Class::AddTo(Module& module) {
 }
 
 base::Object Class::NewInstance() {
-  return template_->InstanceTemplate()->NewInstance();
+  return function_template()->InstanceTemplate()->NewInstance();
 }
 
 base::Object Class::NewInstance(
@@ -49,24 +49,22 @@ base::Object Class::NewInstance(
   std::vector<base::Variant>::const_iterator iter(argv_in.begin());
   while (iter != argv_in.end())
     argv_out.push_back(iter++->handle());
-  return template_->GetFunction()->NewInstance(
+  return function_template()->GetFunction()->NewInstance(
       argv_out.size(), argv_out.data());
 }
 
 Class::Class(std::string name, const glue::ConstructorGlue& constructor)
-    : context_(v8::Persistent<v8::Context>::New(v8::Isolate::GetCurrent(),
-                                                v8::Context::GetEntered()))
-    , template_(v8::Persistent<v8::FunctionTemplate>::New(
-        v8::Isolate::GetCurrent(), v8::FunctionTemplate::New()))
+    : context_(v8::Isolate::GetCurrent(), v8::Context::GetEntered())
+    , template_(v8::Isolate::GetCurrent(), v8::FunctionTemplate::New())
     , name_(name) {
-  template_->SetClassName(v8::String::New(name.c_str(), name.length()));
-  template_->InstanceTemplate()->SetInternalFieldCount(1);
+  function_template()->SetClassName(v8::String::New(name.c_str(), name.length()));
+  function_template()->InstanceTemplate()->SetInternalFieldCount(1);
 
-  constructor.SetCallHandler(template_);
+  constructor.SetCallHandler(function_template());
 }
 
 void Class::Inherit(Class* parent) {
-  template_->Inherit(parent->template_);
+  function_template()->Inherit(parent->function_template());
 }
 
 }

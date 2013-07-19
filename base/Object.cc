@@ -33,13 +33,11 @@ Object::Persistent::Persistent() {
 }
 
 Object::Persistent::Persistent(const Persistent& other)
-    : handle_(v8::Persistent<v8::Object>::New(v8::Isolate::GetCurrent(),
-					      other.handle_)) {
+    : handle_(v8::Isolate::GetCurrent(), other.handle_) {
 }
 
 Object::Persistent::Persistent(const Object& object)
-    : handle_(v8::Persistent<v8::Object>::New(v8::Isolate::GetCurrent(),
-					      object.handle_)) {
+    : handle_(v8::Isolate::GetCurrent(), object.handle_) {
 }
 
 Object::Persistent::~Persistent() {
@@ -47,14 +45,12 @@ Object::Persistent::~Persistent() {
 }
 
 Object::Persistent& Object::Persistent::operator= (const Persistent& other) {
-  handle_ = v8::Persistent<v8::Object>::New(v8::Isolate::GetCurrent(),
-					    other.handle_);
+  handle_.Reset(v8::Isolate::GetCurrent(), other.handle_);
   return *this;
 }
 
 Object::Persistent& Object::Persistent::operator= (const Object& object) {
-  handle_ = v8::Persistent<v8::Object>::New(v8::Isolate::GetCurrent(),
-					    object.handle_);
+  handle_.Reset(v8::Isolate::GetCurrent(), object.handle_);
   return *this;
 }
 
@@ -63,7 +59,7 @@ bool Object::Persistent::IsEmpty() const {
 }
 
 Object Object::Persistent::GetObject() const {
-  return v8::Local<v8::Object>(*handle_);
+  return handle_;
 }
 
 void Object::Persistent::Release() {

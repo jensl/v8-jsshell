@@ -29,11 +29,13 @@ Runtime::Select::Select(Runtime& runtime)
 }
 
 Runtime::~Runtime() {
-  context_.Dispose(v8::Isolate::GetCurrent());
+  Stop();
 }
 
 void Runtime::Start() {
-  context_ = v8::Context::New();
+  v8::HandleScope handle_scope;
+  context_.Reset(v8::Isolate::GetCurrent(),
+                 v8::Context::New(v8::Isolate::GetCurrent()));
 }
 
 void Runtime::Stop() {
@@ -41,7 +43,8 @@ void Runtime::Stop() {
 }
 
 base::Object Runtime::GetGlobalObject() {
-  return context_->Global();
+  return v8::Local<v8::Context>::New(
+      v8::Isolate::GetCurrent(), context_)->Global();
 }
 
 }
