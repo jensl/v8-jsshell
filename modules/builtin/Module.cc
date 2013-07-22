@@ -157,7 +157,7 @@ Module::Instance::Instance(const Features& features)
   }
 
 #if POSTGRESQL_SUPPORT
-  if (!features.Disabled("PosgreSQL")) {
+  if (!features.Disabled("PostgreSQL")) {
     postgresql = new PostgreSQL(features);
     postgresql->AddToRuntime(runtime);
   }
