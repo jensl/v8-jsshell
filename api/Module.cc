@@ -24,7 +24,7 @@
 namespace api {
 
 Module::~Module() {
-  template_.Dispose(v8::Isolate::GetCurrent());
+  template_.Dispose();
 }
 
 Module::Module(int index, std::string name)

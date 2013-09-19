@@ -103,9 +103,8 @@ test([
   },
 
   function () {
-    assertThrows(TypeError, "Cannot convert null to object", function () {
-      scoped({}, null);
-    });
+    assertThrows(TypeError, "Cannot convert undefined or null to object",
+                 function () { scoped({}, null); });
   },
 
   function () {

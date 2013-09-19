@@ -36,7 +36,7 @@ class ConstructorGlue {
   void SetCallHandler(v8::Handle<v8::FunctionTemplate> target) const;
 
  private:
-  v8::InvocationCallback invocation_callback_;
+  v8::FunctionCallback invocation_callback_;
   v8::Handle<v8::Value> data_;
 };
 

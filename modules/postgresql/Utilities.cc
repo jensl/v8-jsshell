@@ -132,7 +132,7 @@ std::vector<base::Variant> ApplyResult(PGconn* connection, PGresult* result,
   for (unsigned row = 0, rows = PQntuples(result);
        row < rows;
        ++row) {
-    v8::HandleScope handle_scope;
+    v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
     std::vector<base::Variant> arguments;
 
     for (unsigned field = 0, fields = PQnfields(result);

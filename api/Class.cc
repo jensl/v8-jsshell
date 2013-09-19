@@ -24,7 +24,7 @@
 namespace api {
 
 Class::~Class() {
-  template_.Dispose(v8::Isolate::GetCurrent());
+  template_.Dispose();
 }
 
 bool Class::HasInstance(base::Object object) {

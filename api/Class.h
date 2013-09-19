@@ -64,7 +64,7 @@ class Class {
 
    private:
     static void CleanUp(v8::Isolate*, v8::Persistent<v8::Object>*,
-			Instance<ActualClass>* parameter);
+                        Class::Instance<ActualClass>* parameter);
   };
 
   v8::Local<v8::Context> context() {
@@ -157,13 +157,13 @@ void Class::Instance<ActualClass>::InitializeObject() {
 
 template <typename ActualClass>
 base::Object Class::Instance<ActualClass>::GetObject() {
-  return object_;
+  return object();
 }
 
 template <typename ActualClass>
 void Class::Instance<ActualClass>::SetObject(base::Object object) {
   object_.Reset(v8::Isolate::GetCurrent(), object.handle());
-  object_.MakeWeak(v8::Isolate::GetCurrent(), this, &CleanUp);
+  object_.MakeWeak(this, &CleanUp);
 }
 
 template <typename ActualClass>
@@ -174,10 +174,10 @@ ActualClass* Class::Instance<ActualClass>::GetClass() {
 template <typename ActualClass>
 void Class::Instance<ActualClass>::CleanUp(
     v8::Isolate*, v8::Persistent<v8::Object>*,
-    Instance<ActualClass>* parameter) {
+    Class::Instance<ActualClass> *parameter) {
   Class::Instance<ActualClass>* instance =
       static_cast<Class::Instance<ActualClass>*>(parameter);
-  instance->object_.Dispose(v8::Isolate::GetCurrent());
+  instance->object_.Dispose();
   delete instance;
 }
 
@@ -249,26 +249,27 @@ void Class::AddProperty(std::string name,
         , setter_(setter) {
     }
 
-    static v8::Handle<v8::Value> getter(v8::Local<v8::String> property,
-                                        const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+  static void getter(v8::Local<v8::String> property,
+                     const v8::PropertyCallbackInfo<v8::Value>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper*>(
           v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
           Class::Instance<ActualClass>::FromObject(wrapper->cls_, info.This());
       try {
-        return handle_scope.Close(
-            conversions::as_result(wrapper->getter_(instance)).handle());
+        info.GetReturnValue().Set(
+            handle_scope.Close(conversions::as_result(
+                wrapper->getter_(instance)).handle()));
       } catch (base::Error& error) {
         error.Raise();
-        return v8::Handle<v8::Value>();
+        info.GetReturnValue().Set(v8::Handle<v8::Value>());
       }
     }
 
     static void setter(v8::Local<v8::String> property,
                        v8::Local<v8::Value> value_in,
-                       const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+                       const v8::PropertyCallbackInfo<void>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper*>(
           v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
@@ -325,8 +326,8 @@ void Class::AddNamedHandler(
         , setter_(setter) {
     }
 
-    static v8::Handle<v8::Array> enumerator(const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+   static void enumerator(const v8::PropertyCallbackInfo<v8::Array>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
@@ -338,16 +339,17 @@ void Class::AddNamedHandler(
           const std::string& name(names[index]);
           array->Set(index, v8::String::New(name.c_str(), name.length()));
         }
-        return handle_scope.Close(array);
+        info.GetReturnValue().Set(handle_scope.Close(array));
       } catch (base::Error& error) {
         error.Raise();
-        return v8::Handle<v8::Array>();
+        info.GetReturnValue().Set(v8::Handle<v8::Array>());
+        return;
       }
     }
 
-    static v8::Handle<v8::Integer> query(v8::Local<v8::String> property,
-                                         const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+      static void query(v8::Local<v8::String> property,
+                        const v8::PropertyCallbackInfo<v8::Integer>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
@@ -355,8 +357,11 @@ void Class::AddNamedHandler(
       v8::String::Utf8Value utf8(property);
       std::string name(*utf8, utf8.length());
       unsigned flags = wrapper->query_(instance, name);
-      if ((flags & base::PropertyFlags::kNotFound) != 0)
-        return v8::Handle<v8::Integer>();
+      if ((flags & base::PropertyFlags::kNotFound) != 0) {
+          info.GetReturnValue().Set(v8::Handle<v8::Integer>());
+          return;
+      }
+
       int result = v8::None;
       if ((flags & base::PropertyFlags::kWritable) == 0)
         result |= v8::ReadOnly;
@@ -364,35 +369,38 @@ void Class::AddNamedHandler(
         result |= v8::DontEnum;
       if ((flags & base::PropertyFlags::kConfigurable) == 0)
         result |= v8::DontDelete;
-      return handle_scope.Close(v8::Integer::New(result));
+      info.GetReturnValue().Set(handle_scope.Close(v8::Integer::New(result)));
     }
 
-    static v8::Handle<v8::Value> getter(v8::Local<v8::String> property,
-                                        const v8::AccessorInfo& info) {
+    static void getter(v8::Local<v8::String> property,
+                       const v8::PropertyCallbackInfo<v8::Value>& info) {
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       if (wrapper->getter_) {
-        v8::HandleScope handle_scope;
+        v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
         typename ActualClass::Instance* instance =
-            Class::Instance<ActualClass>::FromObject(wrapper->cls_, info.This());
+            Class::Instance<ActualClass>::FromObject(wrapper->cls_,
+                                                     info.This());
         v8::String::Utf8Value utf8(property);
         std::string name(*utf8, utf8.length());
         if (wrapper->query_) {
           unsigned flags = wrapper->query_(instance, name);
-          if ((flags & base::PropertyFlags::kNotFound) != 0)
-            return v8::Handle<v8::Value>();
+          if ((flags & base::PropertyFlags::kNotFound) != 0) {
+              info.GetReturnValue().Set(v8::Handle<v8::Value>());
+              return;
+          }
         }
-        return handle_scope.Close(
-            conversions::as_result(wrapper->getter_(instance, name)).handle());
+        info.GetReturnValue().Set(handle_scope.Close(
+            conversions::as_result(wrapper->getter_(instance, name)).handle()));
       } else {
-        return v8::Handle<v8::Value>();
+        info.GetReturnValue().Set(v8::Handle<v8::Value>());
       }
     }
 
-    static v8::Handle<v8::Value> setter(v8::Local<v8::String> property,
-                                        v8::Local<v8::Value> value_in,
-                                        const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+      static void setter(v8::Local<v8::String> property,
+                         v8::Local<v8::Value> value_in,
+                         const v8::PropertyCallbackInfo<v8::Value>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
@@ -402,10 +410,10 @@ void Class::AddNamedHandler(
       try {
         Type value(base::AsValue<Type>(value_in));
         wrapper->setter_(instance, name, value);
-        return value_in;
+        info.GetReturnValue().Set(value_in);
       } catch (base::Error& error) {
         error.Raise();
-        return v8::Handle<v8::Value>();
+        info.GetReturnValue().Set(v8::Handle<v8::Value>());
       }
     }
 
@@ -449,27 +457,27 @@ void Class::AddIndexedHandler(
         , flags_(flags) {
     }
 
-    static v8::Handle<v8::Value> getter(uint32_t index,
-                                        const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+      static void getter(uint32_t index,
+                         const v8::PropertyCallbackInfo<v8::Value>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
           static_cast<typename ActualClass::Instance*>(
               info.This()->GetAlignedPointerFromInternalField(0));
       try {
-        return handle_scope.Close(
-            conversions::as_result(wrapper->getter_(instance, index)).handle());
+        info.GetReturnValue().Set(handle_scope.Close(conversions::as_result(
+            wrapper->getter_(instance, index)).handle()));
       } catch (base::Error& error) {
         error.Raise();
-        return v8::Handle<v8::Value>();
+        info.GetReturnValue().Set(v8::Handle<v8::Value>());
       }
     }
 
-    static v8::Handle<v8::Value> setter(uint32_t index,
-                                        v8::Local<v8::Value> value_in,
-                                        const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+      static void setter(uint32_t index,
+                         v8::Local<v8::Value> value_in,
+                         const v8::PropertyCallbackInfo<v8::Value>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
@@ -477,24 +485,27 @@ void Class::AddIndexedHandler(
       try {
         Type value(base::AsValue<Type>(value_in));
         wrapper->setter_(instance, index, value);
-        return value_in;
+        info.GetReturnValue().Set(value_in);
       } catch (base::Error& error) {
         error.Raise();
-        return v8::Handle<v8::Value>();
+        info.GetReturnValue().Set(v8::Handle<v8::Value>());
       }
     }
 
-    static v8::Handle<v8::Integer> query(uint32_t index,
-                                         const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+    static void query(uint32_t index,
+                      const v8::PropertyCallbackInfo<v8::Integer>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       typename ActualClass::Instance* instance =
           static_cast<typename ActualClass::Instance*>(
               info.This()->GetAlignedPointerFromInternalField(0));
       unsigned flags = wrapper->flags_(instance, index);
-      if ((flags & base::PropertyFlags::kNotFound) != 0)
-        return v8::Handle<v8::Integer>();
+      if ((flags & base::PropertyFlags::kNotFound) != 0) {
+        info.GetReturnValue().Set(v8::Handle<v8::Integer>());
+        return;
+      }
+
       int result = v8::None;
       if ((flags & base::PropertyFlags::kWritable) == 0)
         result |= v8::ReadOnly;
@@ -502,7 +513,7 @@ void Class::AddIndexedHandler(
         result |= v8::DontEnum;
       if ((flags & base::PropertyFlags::kConfigurable) == 0)
         result |= v8::DontDelete;
-      return handle_scope.Close(v8::Integer::New(result));
+      info.GetReturnValue().Set(handle_scope.Close(v8::Integer::New(result)));
     }
 
     v8::Handle<v8::Value> Data() { return v8::External::New(this); }
@@ -538,19 +549,20 @@ void Class::AddClassProperty(std::string name,
         , getter_(getter) {
     }
 
-    static v8::Handle<v8::Value> getter(v8::Local<v8::String> property,
-                                        const v8::AccessorInfo& info) {
-      v8::HandleScope handle_scope;
+      static void getter(v8::Local<v8::String> property,
+                         const v8::PropertyCallbackInfo<v8::Value>& info) {
+      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       Wrapper* wrapper = static_cast<Wrapper *>
           (v8::External::Cast(*info.Data())->Value());
       try {
-        return handle_scope.Close(
-            conversions::as_result(wrapper->getter_(wrapper->cls_)).handle());
+        info.GetReturnValue().Set(handle_scope.Close(
+            conversions::as_result(wrapper->getter_(wrapper->cls_)).handle()));
+        return;
       } catch (base::Error& error) {
         error.Raise();
       } catch (base::NestedException) {
       }
-      return v8::Handle<v8::Value>();
+      info.GetReturnValue().Set(v8::Handle<v8::Value>());
     }
 
     v8::Handle<v8::Value> Data() { return v8::External::New(this); }

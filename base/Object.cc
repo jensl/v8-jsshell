@@ -63,7 +63,7 @@ Object Object::Persistent::GetObject() const {
 }
 
 void Object::Persistent::Release() {
-  handle_.Dispose(v8::Isolate::GetCurrent());
+  handle_.Dispose();
   handle_.Clear();
 }
 

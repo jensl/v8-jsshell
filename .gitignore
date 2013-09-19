@@ -1,3 +1,4 @@
 *.jsc
 /user.mk
 /out
+*~

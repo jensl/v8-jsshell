@@ -25,26 +25,27 @@
 namespace api {
 
 Runtime::Select::Select(Runtime& runtime)
-    : context_scope_(runtime.context()) {
+    : handle_scope_(v8::Isolate::GetCurrent()),
+      context_scope_(runtime.context()) {
 }
 
 Runtime::~Runtime() {
+  context_.Dispose();
   Stop();
 }
 
 void Runtime::Start() {
-  v8::HandleScope handle_scope;
+  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
   context_.Reset(v8::Isolate::GetCurrent(),
                  v8::Context::New(v8::Isolate::GetCurrent()));
 }
 
 void Runtime::Stop() {
-  context_.Dispose(v8::Isolate::GetCurrent());
+  context_.Dispose();
 }
 
 base::Object Runtime::GetGlobalObject() {
-  return v8::Local<v8::Context>::New(
-      v8::Isolate::GetCurrent(), context_)->Global();
+  return context()->Global();
 }
 
 }

@@ -35,7 +35,7 @@ class MethodGlue {
   void AddTo(std::string name, v8::Handle<v8::Template> target);
 
  private:
-  v8::InvocationCallback invocation_callback_;
+  v8::FunctionCallback invocation_callback_;
   v8::Handle<v8::Value> data_;
 };
 

@@ -32,7 +32,7 @@ Variant Function::Call(Object this_object,
   if (this_object.IsEmpty())
     this_object = v8::Context::GetCurrent()->Global();
 
-  v8::HandleScope handle_scope;
+  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
   v8::Local<v8::Function> function(object_.handle().As<v8::Function>());
 
   std::vector<v8::Handle<v8::Value>> arguments;
