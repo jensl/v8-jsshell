@@ -343,7 +343,6 @@ void Class::AddNamedHandler(
       } catch (base::Error& error) {
         error.Raise();
         info.GetReturnValue().Set(v8::Handle<v8::Array>());
-        return;
       }
     }
 

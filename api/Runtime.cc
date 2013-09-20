@@ -30,7 +30,6 @@ Runtime::Select::Select(Runtime& runtime)
 }
 
 Runtime::~Runtime() {
-  context_.Dispose();
   Stop();
 }
 
