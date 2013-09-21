@@ -337,7 +337,11 @@ void Process::start(Instance* instance) {
       ::close(stderr_fds[0]);
 
     if (instance->cwd.length() != 0)
-      ::chdir(instance->cwd.c_str());
+      if (::chdir(instance->cwd.c_str()) == -1) {
+        int errnum = errno;
+        perror("chdir() failed");
+        ::exit(errnum);
+      }
 
     if (!instance->executable.empty()) {
       std::vector<char*> argv;
@@ -357,9 +361,7 @@ void Process::start(Instance* instance) {
       execve(instance->executable.c_str(), argv.data(), environ.data());
 
       int errnum = errno;
-
       perror("execve() failed");
-
       ::exit(errnum);
     }
 

@@ -81,6 +81,8 @@ class IOThread : public utilities::Thread {
 
   virtual void Run() override;
 
+  static void WakeUpThread();
+
   utilities::Mutex mutex_;
   bool stopped_;
   int pipe_read_;

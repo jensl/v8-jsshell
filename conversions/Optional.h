@@ -24,7 +24,8 @@ template <typename T>
 class Optional {
  public:
   Optional()
-      : specified_(false) {}
+      : value_(T())
+      , specified_(false) {}
   Optional(const Optional<T>& other)
       : value_(other.value_)
       , specified_(other.specified_) {}

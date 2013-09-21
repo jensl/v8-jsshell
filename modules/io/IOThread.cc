@@ -113,7 +113,7 @@ IOThread::Source* IOThread::AddSource(int fd, std::string data) {
 
   instance->sources_[fd] = source;
 
-  ::write(instance->pipe_write_, "\0", 1);
+  WakeUpThread();
 
   return source;
 }
@@ -135,7 +135,7 @@ IOThread::Sink* IOThread::AddSink(int fd) {
 
   instance->sinks_[fd] = sink;
 
-  ::write(instance->pipe_write_, "\0", 1);
+  WakeUpThread();
 
   return sink;
 }
@@ -175,7 +175,7 @@ struct pollfd PollWrite(int fd) {
 
 void IOThread::Run() {
   utilities::Mutex::Lock lock(mutex_);
-  
+
   while (!stopped_) {
     std::vector<struct pollfd> fds;
 
@@ -208,8 +208,19 @@ void IOThread::Run() {
     /* First fd is the pipe used to wake us up when new sources or sinks are
        added.  We don't care about the actual data; just read it and forget
        about it. */
-    if ((pollfd->revents & POLLIN) != 0)
-      ::read(pollfd->fd, buffer, sizeof buffer);
+    if ((pollfd->revents & POLLIN) != 0) {
+      int result;
+
+      while (true) {
+        result = ::read(pollfd->fd, buffer, sizeof buffer);
+
+        /* Ignore failures other than EINTR.  Unlikely that anything would
+           happen to this pipe, and not much we could do if something did. */
+        if (result != -1 || errno != EINTR)
+          break;
+      }
+    }
+
     ++pollfd;
 
     while (pollfd != fds.end()) {
@@ -280,6 +291,19 @@ void IOThread::Run() {
 
       ++pollfd;
     }
+  }
+}
+
+void IOThread::WakeUpThread() {
+  int result;
+
+  while (true) {
+    result = ::write(instance->pipe_write_, "\0", 1);
+
+    if (result != -1)
+      break;
+    else if (errno != EINTR)
+      throw IOError("write() failed", errno);
   }
 }
 
