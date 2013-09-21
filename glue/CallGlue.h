@@ -36,6 +36,15 @@ base::Variant Return(Result result, base::Variant*) {
   return base::AsResult(result);
 }
 
+template <typename ReturnType>
+ReturnType ReturnVoid(ReturnType*) {
+  return ReturnType();
+}
+
+inline base::Variant ReturnVoid(base::Variant*) {
+  return base::Variant::Undefined();
+}
+
 template <typename An>
 std::vector<An> Rest(const std::vector<base::Variant>& argv, unsigned offset) {
   std::vector<An> rest;
@@ -51,11 +60,27 @@ ReturnType Call(const std::vector<base::Variant>& args, Context context,
   return Return(callback(context), dummy);
 }
 
+template <typename ReturnType, typename Context>
+ReturnType Call(const std::vector<base::Variant>& args, Context context,
+                void (*callback)(Context), ReturnType* dummy,
+                unsigned offset = 0) {
+  callback(context);
+  return ReturnVoid(dummy);
+}
+
 template <typename ReturnType, typename Result, typename Context, typename An>
 ReturnType Call(const std::vector<base::Variant>& args, Context context,
                 Result (*callback)(Context, const std::vector<An>&),
                 ReturnType* dummy, unsigned offset = 0) {
   return Return(callback(context, Rest<An>(args, offset)), dummy);
+}
+
+template <typename ReturnType, typename Context, typename An>
+ReturnType Call(const std::vector<base::Variant>& args, Context context,
+                void (*callback)(Context, const std::vector<An>&),
+                ReturnType* dummy, unsigned offset = 0) {
+  callback(context, Rest<An>(args, offset));
+  return ReturnVoid(dummy);
 }
 
 template <typename ReturnType, typename Result, typename Context, typename A0,
