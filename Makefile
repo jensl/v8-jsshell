@@ -17,26 +17,17 @@
 standard ?= c++11
 compiler ?= g++
 linker ?= $(compiler)
-
-v8 ?= v8
-v8flavor ?= native
-v8include ?= $(v8)/include
+debug ?= no
 v8static ?= no
 
-ifeq ($(v8static),yes)
-v8lib ?= $(v8)/out/$(v8flavor)/obj.target/tools/gyp
-v8objects ?= $(v8lib)/*.a
+ifeq ($(debug),yes)
+cflags ?= -g
 else
-v8flags ?= library=shared
-v8lib ?= $(v8)/out/$(v8flavor)/lib.target
-v8lflags ?= -Wl,-rpath=$(abspath $(v8lib))
-v8libraries ?= v8
+cflags ?= -O2
 endif
 
 components = base conversions glue api utilities modules jsshell
 fragments = $(components:%=%/sources.mk)
-include_paths = $(v8include)
-library_paths = $(v8lib)
 libraries += pthread
 
 include $(fragments)
@@ -50,11 +41,12 @@ objects = $(common_objects) $(jsshell_objects)
 targets = $(out)/jsshell test-jsshell
 makefiles = Makefile user.mk $(fragments)
 
-cflags += -I. $(include_paths:%=-I%) -MMD -Wall -Werror -std=$(standard) $(defines:%=-D%)
-lflags += $(library_paths:%=-L%) $(v8lflags)
-libraries += $(v8libraries)
-
 all: $(targets)
+
+include v8.mk
+
+cflags += -I. $(include_paths:%=-I%) -MMD -Wall -Werror -std=$(standard) $(defines:%=-D%)
+lflags += $(library_paths:%=-L%)
 
 ifneq ($(debug),no)
 cflags += -ggdb
@@ -68,7 +60,7 @@ $(objects): $(out)/obj/%.o: %.cc Makefile user.mk $(fragments)
 $(out)/jsshell: v8 $(common_objects) $(jsshell_objects)
 	@echo LINK\( jsshell \)
 	@mkdir -p $(out)
-	@$(linker) $(lflags) -o $@ $(common_objects) $(jsshell_objects) $(wildcard $(v8objects)) $(libraries:%=-l%)
+	@$(linker) $(lflags) -o $@ $(common_objects) $(jsshell_objects) $(v8objects) $(libraries:%=-l%)
 
 $(out)/.jsshell.tested: $(out)/jsshell $(wildcard tests/*.js)
 	@rm -rf tests/output
@@ -76,19 +68,12 @@ $(out)/.jsshell.tested: $(out)/jsshell $(wildcard tests/*.js)
 	@$(out)/jsshell --enable=Testing tests/all.js
 	@touch $@
 
-$(v8)/build/gyp:
-	@$(MAKE) -C $(v8) dependencies
-
-v8: $(v8)/build/gyp
-	@$(MAKE) -C $(v8) $(v8flags) $(v8flavor)
-
-clean:
+clean: v8clean
 	@rm -rf $(out)
-	@$(MAKE) -C $(v8) clean
 
 test-jsshell: $(out)/.jsshell.tested
 
-.PHONY: clean test-jsshell v8
+.PHONY: clean test-jsshell
 
 -include $(objects:%.o=%.d)
 
