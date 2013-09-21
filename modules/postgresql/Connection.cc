@@ -58,6 +58,7 @@ Connection::Connection()
 Connection::~Connection() {
 }
 
+#if POSTGRESQL_MAJOR < 9
 namespace {
 
 std::string escape(std::string value) {
@@ -90,6 +91,7 @@ std::string escape(std::string value) {
 }
 
 }
+#endif
 
 Connection::Instance* Connection::constructor(
     Connection*, utilities::Options options) {
