@@ -33,6 +33,7 @@
 #include "modules/Modules.h"
 #include "modules/builtin/Module.h"
 #include "jsshell/ArgumentsParser.h"
+#include "utilities/Anchor.h"
 
 void stop() {
   int stop_here = 0;
@@ -86,6 +87,17 @@ void PrintException(v8::TryCatch& try_catch) {
   }
 }
 
+namespace {
+
+class ReleaseInstance {
+ public:
+  void operator() (modules::builtin::Module::Instance* instance) {
+    modules::builtin::Module::Release(instance);
+  }
+};
+
+}
+
 int Main(const std::vector<std::string>& argv,
          const std::map<std::string, std::string>& environ) {
   struct rlimit core;
@@ -119,6 +131,9 @@ int Main(const std::vector<std::string>& argv,
 
   modules::builtin::Module::Instance* root =
       modules::builtin::Module::Root(features);
+
+  utilities::Anchor<modules::builtin::Module::Instance, ReleaseInstance>
+      anchor(root);
 
   api::Runtime::Select select(modules::builtin::Module::runtime(root));
 

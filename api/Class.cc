@@ -57,7 +57,8 @@ Class::Class(std::string name, const glue::ConstructorGlue& constructor)
     : context_(v8::Isolate::GetCurrent(), v8::Context::GetEntered())
     , template_(v8::Isolate::GetCurrent(), v8::FunctionTemplate::New())
     , name_(name) {
-  function_template()->SetClassName(v8::String::New(name.c_str(), name.length()));
+  function_template()->SetClassName(v8::String::New(name.c_str(),
+                                                    name.length()));
   function_template()->InstanceTemplate()->SetInternalFieldCount(1);
 
   constructor.SetCallHandler(function_template());

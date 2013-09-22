@@ -25,6 +25,8 @@
 
 #include "v8.h"
 
+template <typename T> class Optional;
+
 namespace base {
 
 class Object;
@@ -88,6 +90,8 @@ class Variant {
   static Variant UInt32(std::uint32_t value);
   static Variant String(std::string value);
   static Variant Object(base::Object value);
+
+  static Optional<Variant> FromJSON(std::string json);
 
   void SetBoolean(bool value);
   void SetNumber(double value);

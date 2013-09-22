@@ -18,6 +18,7 @@
 */
 
 #include "Base.h"
+#include "conversions/Optional.h"
 
 namespace base {
 
@@ -193,6 +194,19 @@ std::string Variant::AsJSON() const {
   base::Object json(global.Get("JSON").AsObject());
 
   return json.Call("stringify", { *this }).AsString();
+}
+
+Optional<Variant> Variant::FromJSON(std::string json_string) {
+  base::Object global(v8::Context::GetCurrent()->Global());
+  base::Object json(global.Get("JSON").AsObject());
+
+  v8::TryCatch try_catch;
+
+  Variant result = json.Call("parse", { json_string });
+  if (try_catch.HasCaught())
+    return Optional<Variant>();
+  else
+    return Optional<Variant>(result);
 }
 
 Variant Variant::ToBoolean() const {

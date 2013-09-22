@@ -40,6 +40,9 @@ enum {
 #if ZLIB_SUPPORT
   kZLib,
 #endif
+#if MEMCACHE_SUPPORT
+  kMemCache,
+#endif
 
   kTesting
 };

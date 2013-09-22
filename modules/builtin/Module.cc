@@ -31,6 +31,7 @@
 #include "modules/PostgreSQL.h"
 #include "modules/URL.h"
 #include "modules/ZLib.h"
+#include "modules/MemCache.h"
 #include "modules/Testing.h"
 #include "utilities/File.h"
 #include "utilities/Path.h"
@@ -44,6 +45,7 @@ class GlobalObject : public api::Class {
   class Instance : public api::Class::Instance<GlobalObject> {
    public:
     Instance(Module::Instance* module);
+    virtual ~Instance();
 
     Module::Instance* module;
   };
@@ -63,6 +65,8 @@ class Module::Instance : public api::Class::Instance<Module> {
  public:
   Instance(const Features& features);
 
+  virtual ~Instance();
+
   void InitializeObject() override;
 
   api::Runtime runtime;
@@ -80,6 +84,9 @@ class Module::Instance : public api::Class::Instance<Module> {
 #if ZLIB_SUPPORT
   ZLib* zlib;
 #endif
+#if MEMCACHE_SUPPORT
+  MemCache* memcache;
+#endif
   Testing* testing;
 
   std::map<std::string, bool> features;
@@ -89,6 +96,10 @@ class Module::Instance : public api::Class::Instance<Module> {
 
 GlobalObject::Instance::Instance(Module::Instance* module)
     : module(module) {
+}
+
+GlobalObject::Instance::~Instance() {
+  delete module;
 }
 
 GlobalObject::GlobalObject()
@@ -137,6 +148,9 @@ Module::Instance::Instance(const Features& features)
 #if ZLIB_SUPPORT
     , zlib(NULL)
 #endif
+#if MEMCACHE_SUPPORT
+    , memcache(NULL)
+#endif
     , testing(NULL)
     , features(std::map<std::string, bool>(features.begin(), features.end())) {
   runtime.Start();
@@ -177,10 +191,36 @@ Module::Instance::Instance(const Features& features)
   }
 #endif
 
+#if MEMCACHE_SUPPORT
+  if (!features.Disabled("MemCache")) {
+    memcache = new MemCache(features);
+    memcache->AddToRuntime(runtime);
+  }
+#endif
+
   if (features.Enabled("Testing")) {
     testing = new Testing(features);
     testing->AddToRuntime(runtime);
   }
+}
+
+Module::Instance::~Instance() {
+  delete testing;
+#if MEMCACHE_SUPPORT
+  delete memcache;
+#endif
+#if ZLIB_SUPPORT
+  delete zlib;
+#endif
+#if LIBCURL_SUPPORT
+  delete url;
+#endif
+#if POSTGRESQL_SUPPORT
+  delete postgresql;
+#endif
+  delete os;
+  delete io;
+  delete builtin;
 }
 
 void Module::Instance::InitializeObject() {
@@ -209,6 +249,15 @@ Module::Instance* Module::GetInstance() {
       v8::Context::GetCurrent()->GetEmbedderData(kModuleObject)).AsObject());
 
   return Instance::FromObjectUnsafe(object);
+}
+
+Module::~Module() {
+  delete global_object_;
+}
+
+/* static */
+void Module::Release(Instance* instance) {
+  delete instance;
 }
 
 api::Runtime& Module::runtime(Instance* instance) {

@@ -12,16 +12,11 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 
-modules = builtin io memcache os postgresql url zlib testing
+ifeq ($(memcache),yes)
 
-common_sources += modules/Modules.cc \
-                  modules/BuiltIn.cc \
-                  modules/IO.cc \
-                  modules/MemCache.cc \
-                  modules/OS.cc \
-                  modules/PostgreSQL.cc \
-                  modules/URL.cc \
-                  modules/ZLib.cc \
-                  modules/Testing.cc
+common_sources += modules/memcache/Connection.cc
 
-include $(modules:%=modules/%/sources.mk)
+defines += MEMCACHE_SUPPORT=1
+libraries += memcached
+
+endif

@@ -33,6 +33,8 @@ if (typeof URL != "undefined")
   Module.load("URL/URL.js");
 if (typeof ZLib != "undefined")
   Module.load("ZLib/ZLib.js");
+if (typeof MemCache != "undefined")
+  Module.load("MemCache/MemCache.js");
 
 writeln();
 results.forEach(writeln);

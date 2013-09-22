@@ -1,0 +1,14 @@
+Minimal binding to _memcached_.
+
+To compile, you need to have libmemcached-dev installed:
+
+ foo$ sudo apt-get install libmemcached-dev
+ # Not to be confused with (lib)memcache; a dated impl.
+
+To use/test/run, you need to have a memcached server running. On e.g.,
+localhost,
+
+ foo$ sudo apt-get install memcached
+
+(Tweak to fit if you install packages without using apt-get or
+ are on something not Debian based.)

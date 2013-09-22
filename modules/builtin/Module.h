@@ -42,8 +42,11 @@ class Module : public api::Class {
   class Instance;
 
   Module();
+  virtual ~Module();
 
   Instance* GetInstance();
+
+  static void Release(Instance* instance);
 
   static api::Runtime& runtime(Instance* instance);
 

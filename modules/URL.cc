@@ -68,4 +68,4 @@ std::string URL::post(URL*, std::string url, std::string data,
 
 }
 
-#endif
+#endif // LIBCURL_SUPPORT
