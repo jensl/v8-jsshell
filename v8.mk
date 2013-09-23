@@ -43,16 +43,33 @@ endif
 
 include_paths += v8/include
 
-v8/build/gyp:
-	@$(MAKE) --quiet -C v8 dependencies
+v8deps := v8/build/gyp v8/third_party/icu
 
-v8/out/Makefile.$(v8arch): v8/build/gyp
+$(out)/.v8dependencies: v8/Makefile
+ifneq ($(v8importdepsfrom),)
+	@echo Importing V8 dependencies from \'$(v8importdepsfrom)\'.
+	@tar xjf $(v8importdepsfrom)
+else
+	@$(MAKE) --quiet -C v8 dependencies
+ifneq ($(v8exportdepsto),)
+	@echo Exporting V8 dependencies to \'$(v8exportdepsto)\'.
+	@tar cjf $(v8exportdepsto) $(v8deps)
+endif
+endif
+	@mkdir -p $(shell dirname $@)
+	@touch $@
+
+v8dependencies: $(out)/.v8dependencies
+
+$(v8deps): $(out)/.v8dependencies
+
+v8/out/Makefile.$(v8arch): $(v8deps)
 	@$(MAKE) --quiet -C v8 $(v8mflags) out/Makefile.$(v8arch)
 
 v8: v8/out/Makefile.$(v8arch)
 	@$(MAKE) --quiet -C v8/out -f Makefile.$(v8arch) $(v8cflags) $(v8targets)
 
 v8clean:
-	@$(MAKE) --quiet -C v8 clean
+	@rm -rf v8/out
 
-.PHONY: v8 v8clean
+.PHONY: v8 v8clean v8dependencies
