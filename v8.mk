@@ -18,7 +18,7 @@ else
 v8buildtype ?= Release
 endif
 
-ifeq ($(filter x86_64,$(shell uname -p)),x86_64)
+ifeq ($(filter x86_64,$(shell uname -m)),x86_64)
 v8arch ?= x64
 else
 v8arch ?= ia32
