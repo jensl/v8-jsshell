@@ -28,7 +28,7 @@ endif
 
 components = base conversions glue api utilities modules jsshell
 fragments = $(components:%=%/sources.mk)
-libraries += pthread
+libraries += pthread rt
 
 include $(fragments)
 
