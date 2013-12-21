@@ -68,7 +68,7 @@ class Module {
 template <typename ActualModule>
 ActualModule* Module::FromContext(int index, v8::Handle<v8::Context> context) {
   if (context.IsEmpty())
-    context = v8::Context::GetCurrent();
+    context = v8::Isolate::GetCurrent()->GetCurrentContext();
   return static_cast<ActualModule*>(static_cast<Module*>(
       v8::External::Cast(*context->GetEmbedderData(index))->Value()));
 }

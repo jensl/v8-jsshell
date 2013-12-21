@@ -31,12 +31,12 @@ Variant::Variant(Value value)
 
 template <typename Type>
 Variant::Variant(v8::Handle<Type> handle)
-    : handle_(v8::Local<v8::Value>::New(handle)) {
+    : handle_(v8::Local<v8::Value>::New(v8::Isolate::GetCurrent(), handle)) {
 }
 
 template <typename Type>
 Variant::Variant(v8::Local<Type> handle)
-    : handle_(v8::Local<v8::Value>::New(handle)) {
+    : handle_(v8::Local<v8::Value>::New(v8::Isolate::GetCurrent(), handle)) {
 }
 
 }

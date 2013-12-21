@@ -25,7 +25,7 @@ namespace glue {
 void MethodGlue::AddTo(std::string name, v8::Handle<v8::Template> target) {
   v8::Handle<v8::Object> function =
       v8::FunctionTemplate::New(invocation_callback_, data_)->GetFunction();
-  target->Set(name.c_str(), function);
+  target->Set(v8::Isolate::GetCurrent(), name.c_str(), function);
 }
 
 }

@@ -22,7 +22,7 @@
 namespace {
 
 v8::Handle<v8::String> ToString(std::string value) {
-  return v8::String::New(value.c_str(), value.length());
+  return base::String::New(value.c_str(), value.length());
 }
 
 }
@@ -63,15 +63,14 @@ Object Object::Persistent::GetObject() const {
 }
 
 void Object::Persistent::Release() {
-  handle_.Dispose();
-  handle_.Clear();
+  handle_.Reset();
 }
 
 Object::Object() {
 }
 
 Object Object::Create() {
-  return v8::Object::New();
+  return v8::Object::New(v8::Isolate::GetCurrent());
 }
 
 bool Object::IsEmpty() {
@@ -122,7 +121,7 @@ unsigned ConvertPropertyAttributes(v8::PropertyAttribute attributes) {
 
 unsigned Object::GetPropertyFlags(std::string name) {
   if (HasProperty(name)) {
-    v8::Handle<v8::Value> key(v8::String::New(name.c_str(), name.length()));
+    v8::Handle<v8::Value> key(base::String::New(name.c_str(), name.length()));
     v8::PropertyAttribute attributes = handle_->GetPropertyAttributes(key);
     return ConvertPropertyAttributes(attributes);
   } else {
@@ -132,7 +131,7 @@ unsigned Object::GetPropertyFlags(std::string name) {
 
 unsigned Object::GetPropertyFlags(std::uint32_t name) {
   if (HasProperty(name)) {
-    v8::Handle<v8::Value> key(v8::Integer::New(name));
+    v8::Handle<v8::Value> key(v8::Integer::New(v8::Isolate::GetCurrent(), name));
     v8::PropertyAttribute attributes = handle_->GetPropertyAttributes(key);
     return ConvertPropertyAttributes(attributes);
   } else {

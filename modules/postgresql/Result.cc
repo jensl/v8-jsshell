@@ -145,7 +145,7 @@ Result::Instance* as_value(
 template <>
 base::Variant as_result(Result::Instance* result) {
   if (!result)
-    return v8::Null();
+    return v8::Null(v8::Isolate::GetCurrent());
   return result->GetObject().handle();
 }
 

@@ -119,7 +119,7 @@ namespace {
 base::Object MakeDate(struct timespec spec) {
   double time = (static_cast<double>(spec.tv_sec) * 1000 +
                  static_cast<double>(spec.tv_nsec) / 1000000);
-  return v8::Date::New(time).As<v8::Object>();
+  return v8::Date::New(v8::Isolate::GetCurrent(), time).As<v8::Object>();
 }
 
 }

@@ -190,14 +190,16 @@ base::Object Variant::AsObject() const {
 }
 
 std::string Variant::AsJSON() const {
-  base::Object global(v8::Context::GetCurrent()->Global());
+  base::Object global(
+      v8::Isolate::GetCurrent()->GetCurrentContext()->Global());
   base::Object json(global.Get("JSON").AsObject());
 
   return json.Call("stringify", { *this }).AsString();
 }
 
 Optional<Variant> Variant::FromJSON(std::string json_string) {
-  base::Object global(v8::Context::GetCurrent()->Global());
+  base::Object global(
+      v8::Isolate::GetCurrent()->GetCurrentContext()->Global());
   base::Object json(global.Get("JSON").AsObject());
 
   v8::TryCatch try_catch;
@@ -239,49 +241,49 @@ Variant Variant::ToObject() const {
 
 Variant Variant::Undefined() {
   Variant result;
-  result.handle_ = v8::Undefined();
+  result.handle_ = v8::Undefined(v8::Isolate::GetCurrent());
   return result;
 }
 
 Variant Variant::Null() {
   Variant result;
-  result.handle_ = v8::Null();
+  result.handle_ = v8::Null(v8::Isolate::GetCurrent());
   return result;
 }
 
 Variant Variant::Boolean(bool value) {
   Variant result;
-  result.handle_ = v8::Boolean::New(value);
+  result.handle_ = v8::Boolean::New(v8::Isolate::GetCurrent(), value);
   return result;
 }
 
 Variant Variant::Number(double value) {
   Variant result;
-  result.handle_ = v8::Number::New(value);
+  result.handle_ = v8::Number::New(v8::Isolate::GetCurrent(), value);
   return result;
 }
 
 Variant Variant::Integer(std::int64_t value) {
   Variant result;
-  result.handle_ = v8::Number::New(value);
+  result.handle_ = v8::Number::New(v8::Isolate::GetCurrent(), value);
   return result;
 }
 
 Variant Variant::Int32(std::int32_t value) {
   Variant result;
-  result.handle_ = v8::Integer::New(value);
+  result.handle_ = v8::Integer::New(v8::Isolate::GetCurrent(), value);
   return result;
 }
 
 Variant Variant::UInt32(std::uint32_t value) {
   Variant result;
-  result.handle_ = v8::Integer::NewFromUnsigned(value);
+  result.handle_ = v8::Integer::NewFromUnsigned(v8::Isolate::GetCurrent(), value);
   return result;
 }
 
 Variant Variant::String(std::string value) {
   Variant result;
-  result.handle_ = v8::String::New(value.c_str(), value.length());
+  result.handle_ = base::String::New(value.c_str(), value.length());
   return result;
 }
 
@@ -293,27 +295,27 @@ Variant Variant::Object(base::Object value) {
 }
 
 void Variant::SetBoolean(bool value) {
-  handle_ = v8::Boolean::New(value);
+  handle_ = v8::Boolean::New(v8::Isolate::GetCurrent(), value);
 }
 
 void Variant::SetNumber(double value) {
-  handle_ = v8::Number::New(value);
+  handle_ = v8::Number::New(v8::Isolate::GetCurrent(), value);
 }
 
 void Variant::SetInteger(std::int64_t value) {
-  handle_ = v8::Number::New(value);
+  handle_ = v8::Number::New(v8::Isolate::GetCurrent(), value);
 }
 
 void Variant::SetInt32(std::int32_t value) {
-  handle_ = v8::Integer::New(value);
+  handle_ = v8::Integer::New(v8::Isolate::GetCurrent(), value);
 }
 
 void Variant::SetUInt32(std::uint32_t value) {
-  handle_ = v8::Integer::NewFromUnsigned(value);
+  handle_ = v8::Integer::NewFromUnsigned(v8::Isolate::GetCurrent(), value);
 }
 
 void Variant::SetString(std::string value) {
-  handle_ = v8::String::New(value.c_str(), value.length());
+  handle_ = base::String::New(value.c_str(), value.length());
 }
 
 void Variant::SetObject(base::Object value) {

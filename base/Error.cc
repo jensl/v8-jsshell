@@ -41,8 +41,8 @@ TypeError& TypeError::operator<< (const std::string& string) {
 }
 
 void TypeError::Raise() {
-  v8::ThrowException(v8::Exception::TypeError(
-      v8::String::New(message().c_str(), message().length())));
+  v8::Isolate::GetCurrent()->ThrowException(v8::Exception::TypeError(
+      base::String::New(message().c_str(), message().length())));
 }
 
 ReferenceError::ReferenceError(std::string message)
@@ -55,8 +55,8 @@ ReferenceError& ReferenceError::operator<< (const std::string& string) {
 }
 
 void ReferenceError::Raise() {
-  v8::ThrowException(v8::Exception::ReferenceError(
-      v8::String::New(message().c_str(), message().length())));
+  v8::Isolate::GetCurrent()->ThrowException(v8::Exception::ReferenceError(
+      base::String::New(message().c_str(), message().length())));
 }
 
 SyntaxError::SyntaxError(std::string message)
@@ -69,8 +69,8 @@ SyntaxError& SyntaxError::operator<< (const std::string& string) {
 }
 
 void SyntaxError::Raise() {
-  v8::ThrowException(v8::Exception::SyntaxError(
-      v8::String::New(message().c_str(), message().length())));
+  v8::Isolate::GetCurrent()->ThrowException(v8::Exception::SyntaxError(
+      base::String::New(message().c_str(), message().length())));
 }
 
 RangeError::RangeError(std::string message)
@@ -83,8 +83,8 @@ RangeError& RangeError::operator<< (const std::string& string) {
 }
 
 void RangeError::Raise() {
-  v8::ThrowException(v8::Exception::RangeError(
-      v8::String::New(message().c_str(), message().length())));
+  v8::Isolate::GetCurrent()->ThrowException(v8::Exception::RangeError(
+      base::String::New(message().c_str(), message().length())));
 }
 
 CustomError::CustomError(std::string name)
@@ -97,14 +97,14 @@ CustomError::CustomError(std::string name, std::string message)
 }
 
 void CustomError::Raise() {
-  v8::ThrowException(Create());
+  v8::Isolate::GetCurrent()->ThrowException(Create());
 }
 
 v8::Handle<v8::Object> CustomError::Create() {
   v8::Handle<v8::Object> error(v8::Exception::Error(
-      v8::String::New(message().c_str(), message().length()))->ToObject());
-  error->Set(v8::String::New("name"),
-             v8::String::New(name_.c_str(), name_.length()));
+      base::String::New(message().c_str(), message().length()))->ToObject());
+  error->Set(base::String::New("name"),
+             base::String::New(name_.c_str(), name_.length()));
   return error;
 }
 

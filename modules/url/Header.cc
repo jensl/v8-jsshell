@@ -89,7 +89,7 @@ Header::Instance* as_value(
 template <>
 base::Variant as_result(Header::Instance* result) {
   if (!result)
-    return v8::Null();
+    return base::Variant::Null();
   return result->GetObject().handle();
 }
 

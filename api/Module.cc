@@ -24,18 +24,20 @@
 namespace api {
 
 Module::~Module() {
-  template_.Dispose();
+  template_.Reset();
 }
 
 Module::Module(int index, std::string name)
     : index_(index)
     , name_(name)
     , template_(v8::Isolate::GetCurrent(), v8::FunctionTemplate::New()) {
-  function_template()->SetClassName(v8::String::New(name.c_str(), name.length()));
+  function_template()->SetClassName(
+      base::String::New(name.c_str(), name.length()));
 }
 
 void Module::AddToRuntime(Runtime& runtime) {
-  runtime.context()->SetEmbedderData(index_, v8::External::New(this));
+  runtime.context()->SetEmbedderData(
+      index_, v8::External::New(v8::Isolate::GetCurrent(), this));
   ExtendRuntime(runtime);
 }
 

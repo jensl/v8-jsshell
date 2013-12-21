@@ -101,7 +101,9 @@ class Variant {
   void SetString(std::string value);
   void SetObject(base::Object value);
 
-  v8::Handle<v8::Value> handle() const { return handle_; }
+  const v8::Local<v8::Value> handle() const {
+    return v8::Local<v8::Value>(handle_);
+  }
 
  private:
   friend class Object;
