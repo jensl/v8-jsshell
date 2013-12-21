@@ -17,22 +17,22 @@
 
 */
 
-#ifndef BASE_H
-#define BASE_H
+#ifndef BASE_STRING_H
+#define BASE_STRING_H
 
-extern void stop();
+#include "v8.h"
 
-#include "base/PropertyFlags.h"
-#include "base/Variant.h"
-#include "base/Object.h"
-#include "base/Array.h"
-#include "base/Function.h"
-#include "base/Error.h"
-#include "base/Convert.h"
-#include "base/String.h"
+namespace base {
 
-#include "base/VariantImpl.h"
-#include "base/ObjectImpl.h"
-#include "base/ArrayImpl.h"
+class String {
+public:
+  static v8::Local<v8::String> New(const char* data, int length = -1) {
+    return v8::String::NewFromUtf8(
+        v8::Isolate::GetCurrent(), data, v8::String::kNormalString, length);
+  }
+};
 
-#endif // BASE_H
+}
+
+#endif // BASE_CONVERT_H
+
