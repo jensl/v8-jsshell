@@ -24,16 +24,20 @@
 
 #include <memory>
 
+#include "base/String.h"
 #include "utilities/File.h"
 
 namespace utilities {
 
 v8::Handle<v8::Script> CompileFile(std::string filename, std::string encoding) {
   File file(filename, "r");
-  std::string source(file.read(encoding));
+  std::string raw_source(file.read(encoding));
 
   std::unique_ptr<v8::ScriptData> precompiled;
   std::string data_precompiled;
+
+  v8::Handle<v8::String> source(
+      base::String::New(raw_source.c_str(), raw_source.length()));
 
   if (filename.length() > 3 &&
       filename.compare(filename.length() - 3, 3, ".js") == 0) {
@@ -45,8 +49,8 @@ v8::Handle<v8::Script> CompileFile(std::string filename, std::string encoding) {
       if (file.mtime() <= file_precompiled.mtime()) {
         data_precompiled = file_precompiled.read();
 
-        precompiled.reset(v8::ScriptData::New(data_precompiled.c_str(),
-                                              data_precompiled.length()));
+        precompiled.reset(v8::ScriptData::New(
+            data_precompiled.c_str(), data_precompiled.length()));
       }
     } catch (File::Error &) {
       /* Failed to read a *.jsc file.  That's okay, just ignore it. */
@@ -56,36 +60,34 @@ v8::Handle<v8::Script> CompileFile(std::string filename, std::string encoding) {
       try {
         File file_precompiled(filename_precompiled, "w");
 
-        precompiled.reset(
-            v8::ScriptData::PreCompile(source.c_str(), source.length()));
+        precompiled.reset(v8::ScriptData::PreCompile(source));
 
         if (precompiled) {
           file_precompiled.write(
               std::string(precompiled->Data(), precompiled->Length()));
         }
       } catch (File::Error error) {
-	//fprintf(stderr, "Failed to write %s: %s\n", filename.c_str(), error.message().c_str());
+        //fprintf(stderr, "Failed to write %s: %s\n", filename.c_str(), error.message().c_str());
 
         /* Couldn't open the file for writing.  That's okay, just ignore it. */
       }
     }
   }
 
-  v8::ScriptOrigin origin(v8::String::New(filename.c_str(), filename.length()));
+  v8::ScriptOrigin origin(
+      base::String::New(filename.c_str(), filename.length()));
 
   if (precompiled) {
     v8::TryCatch try_catch;
 
-    v8::Handle<v8::Script> script(
-        v8::Script::Compile(v8::String::New(source.c_str(), source.length()),
-                            &origin, precompiled.get()));
+    v8::Local<v8::Script> script(
+        v8::Script::New(source, &origin, precompiled.get()));
 
     if (!try_catch.HasCaught())
       return script;
   }
-  
-  return v8::Script::Compile(v8::String::New(source.c_str(), source.length()),
-                             &origin);
+
+  return v8::Script::New(source, &origin);
 }
 
 }
