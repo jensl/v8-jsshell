@@ -153,8 +153,9 @@ Module::Instance::Instance(const Features& features)
 #endif
     , testing(NULL)
     , features(std::map<std::string, bool>(features.begin(), features.end())) {
-  runtime.Start();
 
+  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
+  runtime.Start();
   api::Runtime::Select select(runtime);
 
   builtin = new BuiltIn;
@@ -245,8 +246,10 @@ Module::Module()
 }
 
 Module::Instance* Module::GetInstance() {
+  v8::Local<v8::Context> context =
+      v8::Isolate::GetCurrent()->GetCurrentContext();
   base::Object object(base::Variant(
-      v8::Context::GetCurrent()->GetEmbedderData(kModuleObject)).AsObject());
+      context->GetEmbedderData(kModuleObject)).AsObject());
 
   return Instance::FromObjectUnsafe(object);
 }
@@ -298,7 +301,7 @@ base::Variant Module::Load(Instance* instance, std::string path,
 base::Variant Module::Eval(Instance* instance, std::string source) {
   api::Runtime::Select select(instance->runtime);
   v8::Handle<v8::Script> script(
-      v8::Script::Compile(v8::String::New(source.c_str(), source.length())));
+      v8::Script::Compile(base::String::New(source.c_str(), source.length())));
 
   if (script.IsEmpty())
     throw base::NestedException();

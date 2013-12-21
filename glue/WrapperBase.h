@@ -36,8 +36,8 @@ class WrapperBase {
   Callback callback() { return callback_; }
 
   static void invocation_callback(
-     const v8::FunctionCallbackInfo<v8::Value> &info) {
-    v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
+      const v8::FunctionCallbackInfo<v8::Value> &info) {
+    v8::EscapableHandleScope handle_scope(info.GetIsolate());
     WrapperBase<Owner, Callback>* wrapper =
         static_cast<WrapperBase<Owner, Callback>*>(
             v8::External::Cast(*info.Data())->Value());
@@ -45,12 +45,13 @@ class WrapperBase {
       std::vector<base::Variant> argv;
       for (int index = 0; index < info.Length(); ++index)
         argv.push_back(info[index]);
-      info.GetReturnValue().Set(handle_scope.Close(wrapper->Invoke(info.This(), argv).handle()));
+      info.GetReturnValue().Set(
+          handle_scope.Escape(wrapper->Invoke(info.This(), argv).handle()));
     } catch (base::Error& error) {
       error.Raise();
-      info.GetReturnValue().Set(v8::Undefined());
+      info.GetReturnValue().Set(v8::Undefined(info.GetIsolate()));
     } catch (base::NestedException) {
-      info.GetReturnValue().Set(v8::Undefined());
+      info.GetReturnValue().Set(v8::Undefined(info.GetIsolate()));
     }
   }
 
@@ -66,7 +67,7 @@ class WrapperBase {
 
 template <typename Owner, typename Callback>
 v8::Handle<v8::Value> WrapperBase<Owner, Callback>::Data() {
-  return v8::External::New(this);
+  return v8::External::New(v8::Isolate::GetCurrent(), this);
 }
 
 }

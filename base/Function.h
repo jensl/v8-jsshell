@@ -25,17 +25,17 @@ namespace base {
 class Function {
  public:
   Function();
-  Function(base::Object object);
+  Function(Object object);
 
   Variant Call(Object this_object,
                const std::vector<Variant>& arguments = std::vector<Variant>());
   Variant Call(std::string method,
                const std::vector<Variant>& arguments = std::vector<Variant>());
 
-  base::Object object() { return object_; }
+  Object object() { return object_; }
 
  private:
-  base::Object object_;
+  Object object_;
 };
 
 }

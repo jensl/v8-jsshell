@@ -27,12 +27,16 @@ Function::Function(base::Object object)
     throw base::TypeError("Object is not callable");
 }
 
-Variant Function::Call(Object this_object,
-                     const std::vector<Variant>& arguments_in) {
-  if (this_object.IsEmpty())
-    this_object = v8::Context::GetCurrent()->Global();
+Variant Function::Call(Object this_object_in,
+                       const std::vector<Variant>& arguments_in) {
+  v8::EscapableHandleScope handle_scope(v8::Isolate::GetCurrent());
+  v8::Local<v8::Object> this_object;
 
-  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
+  if (this_object_in.IsEmpty())
+    this_object = v8::Isolate::GetCurrent()->GetCurrentContext()->Global();
+  else
+    this_object = this_object_in.handle();
+
   v8::Local<v8::Function> function(object_.handle().As<v8::Function>());
 
   std::vector<v8::Handle<v8::Value>> arguments;
@@ -43,12 +47,12 @@ Variant Function::Call(Object this_object,
     arguments.push_back(iter->handle());
 
   v8::Local<v8::Value> returned(
-      function->Call(this_object.handle(), arguments.size(), arguments.data()));
+      function->Call(this_object, arguments.size(), arguments.data()));
 
   if (returned.IsEmpty())
     throw NestedException();
 
-  return handle_scope.Close(returned);
+  return handle_scope.Escape(returned);
 }
 
 }

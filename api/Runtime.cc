@@ -25,8 +25,7 @@
 namespace api {
 
 Runtime::Select::Select(Runtime& runtime)
-    : handle_scope_(v8::Isolate::GetCurrent()),
-      context_scope_(runtime.context()) {
+    : context_scope_(runtime.context()) {
 }
 
 Runtime::~Runtime() {
@@ -40,7 +39,7 @@ void Runtime::Start() {
 }
 
 void Runtime::Stop() {
-  context_.Dispose();
+  context_.Reset();
 }
 
 base::Object Runtime::GetGlobalObject() {

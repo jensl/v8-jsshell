@@ -129,6 +129,8 @@ int Main(const std::vector<std::string>& argv,
     }
   }
 
+  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
+
   modules::builtin::Module::Instance* root =
       modules::builtin::Module::Root(features);
 
@@ -140,7 +142,6 @@ int Main(const std::vector<std::string>& argv,
   for (auto iter(parser.begin()); iter != parser.end(); ++iter) {
     if ((iter->is_option() && iter->name() == "evaluate") ||
         iter->is_argument()) {
-      v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
       v8::TryCatch try_catch;
 
       if (iter->is_option())
