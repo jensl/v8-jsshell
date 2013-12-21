@@ -13,9 +13,9 @@
 # the License.
 
 ifeq ($(debug),yes)
-v8buildtype ?= Debug
+v8buildtype ?= debug
 else
-v8buildtype ?= Release
+v8buildtype ?= release
 endif
 
 ifeq ($(filter x86_64,$(shell uname -m)),x86_64)
@@ -24,22 +24,36 @@ else
 v8arch ?= ia32
 endif
 
-v8builddir = v8/out/$(v8buildtype)
-v8cflags += BUILDTYPE=$(v8buildtype) builddir=$(abspath $(v8builddir))
+# The BUILDTYPE variable is assumed to have values
+# with the initial letter capitalized. Everywhere other
+# use appears to be all lower-case.
+#
+# That inconsistency will no doubt disappear, but for now..
+#
+V8buildtype = $(subst r,R,$(subst d,D,$(v8buildtype)))
+
+v8builddir = v8/out/$(v8arch).$(v8buildtype)
+v8cflags += BUILDTYPE=$(V8buildtype) builddir=$(abspath $(v8builddir))
 
 ifeq ($(v8static),yes)
-v8lib := $(v8builddir)/obj.target/tools/gyp
 v8targets := v8_base.$(v8arch) v8_nosnapshot.$(v8arch) v8_snapshot
-v8objects := $(v8targets:%=$(v8lib)/lib%.a)
+libraries += v8_base.$(v8arch) icui18n icuuc icudata v8_nosnapshot.$(v8arch)
+
+v8objdir = $(v8builddir)/obj.target
+v8lib := $(v8objdir)/tools/gyp
+iculib := $(v8objdir)/third_party/icu
 else
-v8lib := $(v8builddir)/lib.target
 v8mflags += library=shared
 v8targets := v8
 
-library_paths += $(v8lib)
-libraries += v8
+v8lib := $(v8builddir)/lib.target
+
+libraries += v8 icuuc icui18n
 lflags += -Wl,-rpath=$(abspath $(v8lib))
 endif
+
+library_paths += $(v8lib) $(iculib)
+#libraries += v8_base.$(v8arch) icui18n icuuc icudata v8_nosnapshot.$(v8arch)
 
 include_paths += v8/include
 
@@ -63,11 +77,13 @@ v8dependencies: $(out)/.v8dependencies
 
 $(v8deps): $(out)/.v8dependencies
 
-v8/out/Makefile.$(v8arch): $(v8deps)
-	@$(MAKE) --quiet -C v8 $(v8mflags) out/Makefile.$(v8arch)
+v8BuildMakefile = Makefile.$(v8arch).$(v8buildtype)
 
-v8: v8/out/Makefile.$(v8arch)
-	@$(MAKE) --quiet -C v8/out -f Makefile.$(v8arch) $(v8cflags) $(v8targets)
+v8/out/$(v8BuildMakefile): $(v8deps)
+	@$(MAKE) --quiet -C v8 $(v8mflags) out/$(v8BuildMakefile)
+
+v8: v8/out/$(v8BuildMakefile)
+	@$(MAKE) --quiet -C v8/out -f $(v8BuildMakefile) $(v8cflags) $(v8targets)
 
 v8clean:
 	@rm -rf v8/out
