@@ -45,7 +45,6 @@ class GlobalObject : public api::Class {
   class Instance : public api::Class::Instance<GlobalObject> {
    public:
     Instance(Module::Instance* module);
-    virtual ~Instance();
 
     Module::Instance* module;
   };
@@ -96,10 +95,6 @@ class Module::Instance : public api::Class::Instance<Module> {
 
 GlobalObject::Instance::Instance(Module::Instance* module)
     : module(module) {
-}
-
-GlobalObject::Instance::~Instance() {
-  delete module;
 }
 
 GlobalObject::GlobalObject()
