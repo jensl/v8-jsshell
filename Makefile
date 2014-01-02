@@ -28,7 +28,6 @@ endif
 
 components = base conversions glue api utilities modules jsshell
 fragments = $(components:%=%/sources.mk)
-libraries += pthread rt
 
 include $(fragments)
 
@@ -47,6 +46,7 @@ include v8.mk
 
 cflags += -I. $(include_paths:%=-I%) -MMD -Wall -Werror -std=$(standard) $(defines:%=-D%)
 lflags += $(library_paths:%=-L%)
+libraries += pthread rt
 
 ifneq ($(debug),no)
 cflags += -ggdb
