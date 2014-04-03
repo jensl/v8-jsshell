@@ -120,7 +120,7 @@ var results = [];
 
 function endScope() {
   if (errors)
-    results.push(format("%20s: %3d errors!", scope, errors));
+    results.push(format("%30s: %3d errors!", scope, errors));
   else
-    results.push(format("%20s: %3d assertions held", scope, index));
+    results.push(format("%30s: %3d assertions held", scope, index));
 }

@@ -73,6 +73,7 @@ File::File()
     : Class("File", constructor) {
   AddMethod<File>("fileno", fileno);
   AddMethod<File>("setBlocking", setBlocking);
+  AddMethod<File>("setCloseOnExec", setCloseOnExec);
   AddMethod<File>("read", read);
   AddMethod<File>("write", write);
   AddMethod<File>("stat", stat);
@@ -166,25 +167,37 @@ int File::fileno(Instance* instance) {
   return instance->fd;
 }
 
-void File::setBlocking(Instance* instance, bool value) {
-  int flags = ::fcntl(instance->fd, F_GETFL);
+namespace {
+
+void updateFlag(int fd, int get, int set, int flag, bool value) {
+  int flags = ::fcntl(fd, get);
 
   if (flags == -1)
     throw IOError("fnctl() failed", errno);
 
   int new_flags;
 
-  if (!value)
-    new_flags = flags | O_NONBLOCK;
+  if (value)
+    new_flags = flags | flag;
   else
-    new_flags = flags & ~O_NONBLOCK;
+    new_flags = flags & ~flag;
 
   if (new_flags != flags) {
-    int retval = ::fcntl(instance->fd, F_SETFL, new_flags);
+    int retval = ::fcntl(fd, set, new_flags);
 
     if (retval == -1)
       throw IOError("fnctl() failed", errno);
   }
+}
+
+}
+
+void File::setBlocking(Instance* instance, bool value) {
+  updateFlag(instance->fd, F_GETFL, F_SETFL, O_NONBLOCK, !value);
+}
+
+void File::setCloseOnExec(Instance* instance, bool value) {
+  updateFlag(instance->fd, F_GETFD, F_SETFD, FD_CLOEXEC, value);
 }
 
 builtin::Bytes::Instance* File::read(Instance* instance,

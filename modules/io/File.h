@@ -52,6 +52,7 @@ class File : public api::Class {
 
   static int fileno(Instance* instance);
   static void setBlocking(Instance* instance, bool value);
+  static void setCloseOnExec(Instance* instance, bool value);
 
   static builtin::Bytes::Instance* read(Instance* instance,
                                         Optional<unsigned> buflen);

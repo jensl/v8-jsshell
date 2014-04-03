@@ -19,3 +19,4 @@
 "use strict";
 
 Module.load("IO.File.utimes.js");
+Module.load("IO.File.setCloseOnExec.js");
