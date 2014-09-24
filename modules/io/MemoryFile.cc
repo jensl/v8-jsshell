@@ -82,10 +82,10 @@ MemoryFile* MemoryFile::FromContext(v8::Handle<v8::Context> context) {
 }
 
 MemoryFile::Instance* MemoryFile::constructor(
-    MemoryFile*, Optional<builtin::Bytes::Instance*> value_in) {
+    MemoryFile*, Optional<builtin::Bytes::Value> value_in) {
   std::string value, mode;
   if (value_in.specified()) {
-    value = builtin::Bytes::data(value_in.value());
+    value = value_in.value();
     mode = "r";
   } else {
     mode = "a";
@@ -93,30 +93,30 @@ MemoryFile::Instance* MemoryFile::constructor(
   return new Instance(value, mode);
 }
 
-builtin::Bytes::Instance* MemoryFile::read(Instance* instance,
-                                           Optional<unsigned> buflen) {
+builtin::Bytes::Value MemoryFile::read(Instance* instance,
+                                       Optional<unsigned> buflen) {
   if (instance->mode != "r")
     throw IOError("file not open for reading");
   unsigned length = instance->value.length() - instance->position;
   if (buflen.specified() && buflen.value() != 0 && buflen.value() < length)
     length = buflen.value();
   if (length == 0)
-    return NULL;
+    return builtin::Bytes::Value();
   std::string result = std::string(instance->value, instance->position, length);
   instance->position += length;
   return builtin::Bytes::FromContext()->New(result);
 }
 
-void MemoryFile::write(Instance* instance, builtin::Bytes::Instance* bytes) {
+void MemoryFile::write(Instance* instance, builtin::Bytes::Value bytes) {
   if (instance->mode != "a")
     throw IOError("file not open for reading");
-  instance->value += builtin::Bytes::data(bytes);
+  instance->value += static_cast<std::string>(bytes);
 }
 
 void MemoryFile::close(Instance* file) {
 }
 
-builtin::Bytes::Instance* MemoryFile::get_value(Instance* instance) {
+builtin::Bytes::Value MemoryFile::get_value(Instance* instance) {
   return builtin::Bytes::FromContext()->New(instance->value);
 }
 

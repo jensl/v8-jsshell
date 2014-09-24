@@ -224,8 +224,8 @@ void Socket::connect(Socket::Instance* instance,
   instance->connected = true;
 }
 
-builtin::Bytes::Instance* Socket::recv(Socket::Instance* instance,
-                                       unsigned buflen) {
+builtin::Bytes::Value Socket::recv(Socket::Instance* instance,
+                                   unsigned buflen) {
   if (!instance->connected)
     throw IOError("socket not connected");
   else if (buflen == 0)
@@ -235,7 +235,7 @@ builtin::Bytes::Instance* Socket::recv(Socket::Instance* instance,
   ssize_t retval = ::recv(instance->fd, buffer.get(), buflen, 0);
 
   if (retval == 0)
-    return NULL;
+    return builtin::Bytes::Value();
 
   if (retval == -1) {
     if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -288,12 +288,12 @@ int Socket::recvfd(Instance* instance) {
   return reinterpret_cast<int*>(CMSG_DATA(h))[0];
 }
 
-std::int64_t Socket::send(Socket::Instance* instance, builtin::Bytes::Instance* bytes) {
+std::int64_t Socket::send(Socket::Instance* instance, builtin::Bytes::Value bytes) {
   if (!instance->connected)
     throw IOError("socket not connected");
 
-  const char* buffer = builtin::Bytes::data(bytes).c_str();
-  size_t length = builtin::Bytes::data(bytes).length();
+  const char* buffer = static_cast<const char*>(bytes.data());
+  size_t length = bytes.length();
   size_t sent = 0;
 
   while (sent < length) {

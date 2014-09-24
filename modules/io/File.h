@@ -54,16 +54,16 @@ class File : public api::Class {
   static void setBlocking(Instance* instance, bool value);
   static void setCloseOnExec(Instance* instance, bool value);
 
-  static builtin::Bytes::Instance* read(Instance* instance,
-                                        Optional<unsigned> buflen);
-  static void write(Instance* instance, builtin::Bytes::Instance* bytes);
+  static builtin::Bytes::Value read(Instance* instance,
+                                    Optional<size_t> buflen);
+  static void write(Instance* instance, builtin::Bytes::Value bytes);
   static Stat::Instance* stat(Instance* instance);
   static void close(Instance* instance);
 
   static bool get_closed(Instance* instance);
 
-  static builtin::Bytes::Instance* read(File*, std::string path);
-  static void write(File*, std::string path, builtin::Bytes::Instance* bytes);
+  static builtin::Bytes::Value read(File*, std::string path);
+  static void write(File*, std::string path, builtin::Bytes::Value bytes);
 
   static File::Instance* fdopen(File* module, utilities::FileDescriptor fd,
                                 Optional<std::string> mode);

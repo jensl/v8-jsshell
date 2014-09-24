@@ -200,8 +200,7 @@ void File::setCloseOnExec(Instance* instance, bool value) {
   updateFlag(instance->fd, F_GETFD, F_SETFD, FD_CLOEXEC, value);
 }
 
-builtin::Bytes::Instance* File::read(Instance* instance,
-                                     Optional<unsigned> buflen) {
+builtin::Bytes::Value File::read(Instance* instance, Optional<size_t> buflen) {
   try {
     std::string data;
 
@@ -216,17 +215,17 @@ builtin::Bytes::Instance* File::read(Instance* instance,
 
     return builtin::Bytes::FromContext()->New(data);
   } catch (utilities::FileDescriptor::EndOfFile&) {
-    return NULL;
+    return builtin::Bytes::Value();
   } catch (utilities::FileDescriptor::Error& error) {
     throw IOError("read() failed", error.errnum);
   }
 }
 
-void File::write(Instance* instance, builtin::Bytes::Instance* bytes) {
-  unsigned remaining = builtin::Bytes::data(bytes).length();
+void File::write(Instance* instance, builtin::Bytes::Value bytes) {
+  unsigned remaining = bytes.length();
 
   while (remaining) {
-    ssize_t nwritten = ::write(instance->fd, builtin::Bytes::data(bytes).c_str(), remaining);
+    ssize_t nwritten = ::write(instance->fd, bytes.data(), remaining);
 
     if (nwritten == -1) {
       if (errno == EINTR)
@@ -239,7 +238,7 @@ void File::write(Instance* instance, builtin::Bytes::Instance* bytes) {
   }
 }
 
-builtin::Bytes::Instance* File::read(File*, std::string path) {
+builtin::Bytes::Value File::read(File*, std::string path) {
   utilities::Anchor<Instance> instance(NewInstance(path, "r"));
   std::string data;
 
@@ -253,7 +252,7 @@ builtin::Bytes::Instance* File::read(File*, std::string path) {
   return builtin::Bytes::FromContext()->New(data);
 }
 
-void File::write(File*, std::string path, builtin::Bytes::Instance* data) {
+void File::write(File*, std::string path, builtin::Bytes::Value data) {
   utilities::Anchor<Instance> instance(NewInstance(path, "w"));
 
   write(instance, data);

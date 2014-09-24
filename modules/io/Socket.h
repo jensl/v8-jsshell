@@ -53,9 +53,9 @@ class Socket : public api::Class {
   static void listen(Instance* instance, int backlog);
   static Socket::Instance* accept(Instance* instance);
   static void connect(Instance* instance, SocketAddress::Instance* address);
-  static builtin::Bytes::Instance* recv(Instance* instance, unsigned buflen);
+  static builtin::Bytes::Value recv(Instance* instance, unsigned buflen);
   static int recvfd(Instance* instance);
-  static std::int64_t send(Instance* instance, builtin::Bytes::Instance* bytes);
+  static std::int64_t send(Instance* instance, builtin::Bytes::Value bytes);
   static void sendfd(Instance* instance, base::Variant fd);
   static void shutdown(Instance* instance, std::string how);
   static void close(Instance* instance);

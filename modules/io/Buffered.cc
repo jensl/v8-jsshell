@@ -70,8 +70,8 @@ void Fill(Buffered::Instance* instance) {
 
 }
 
-builtin::Bytes::Instance* Buffered::read(Instance* instance,
-                                         Optional<unsigned> nbytes_opt) {
+builtin::Bytes::Value Buffered::read(Instance* instance,
+                                     Optional<unsigned> nbytes_opt) {
   size_t nbytes;
   if (nbytes_opt.specified())
     nbytes = nbytes_opt.value();

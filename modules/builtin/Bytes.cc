@@ -28,113 +28,107 @@
 namespace modules {
 namespace builtin {
 
-class Bytes::Instance : public Class::Instance<Bytes> {
- public:
-  Instance();
-  Instance(std::string data);
-  ~Instance();
-
-  void InitializeObject();
-
-  std::string data;
-};
-
-Bytes::Instance::Instance() {
-}
-
-Bytes::Instance::Instance(std::string data)
-    : data(data) {
-  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(data.length());
-}
-
-Bytes::Instance::~Instance() {
-  int64_t length = -static_cast<intptr_t>(data.length());
-  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(length);
-}
-
-void Bytes::Instance::InitializeObject() {
-  GetObject().handle()->SetIndexedPropertiesToExternalArrayData(
-      const_cast<char*>(data.c_str()), v8::kExternalUnsignedByteArray,
-      data.length());
-}
-
 Bytes::Bytes()
     : Class("Bytes", &constructor) {
-  AddMethod<Bytes>("toString", &decode);
-  AddMethod<Bytes>("decode", &decode);
-  AddMethod<Bytes>("slice", &slice);
-  AddMethod<Bytes>("concat", &concat);
-  AddMethod<Bytes>("toJSON", &toJSON);
-  AddProperty<Bytes>("length", &get_length);
+  AddGenericMethod<Bytes>("toString", &decode);
+  AddGenericMethod<Bytes>("decode", &decode);
+  AddGenericMethod<Bytes>("slice", &slice);
+  AddGenericMethod<Bytes>("concat", &concat);
+  AddGenericMethod<Bytes>("toJSON", &toJSON);
   AddClassFunction<Bytes>("encode", &encode);
+  Inherit(base::Variant::MakeUint8Array(
+      base::Variant::MakeArrayBuffer(0)).GetPrototype());
 }
 
-const std::string& Bytes::data(Instance* instance) {
-  return instance->data;
+void* Bytes::Value::data() {
+  return value_.ExtractArrayBufferData();
 }
 
-Bytes::Instance* Bytes::New(const std::string& data) {
-  Instance* instance = new Instance(data);
-  instance->CreateObject(this);
-  return instance;
+size_t Bytes::Value::length() {
+  return value_.ExtractArrayBufferLength();
+}
+
+Bytes::Value Bytes::New(const std::string& data) {
+  base::Variant result(base::Variant::MakeUint8Array(
+      base::Variant::MakeArrayBuffer(data.c_str(), data.size())));
+  result.AsObject().SetPrototype(GetPrototype());
+  return result;
+}
+
+Bytes::Value Bytes::New(const void* data, size_t length) {
+  base::Variant result(base::Variant::MakeUint8Array(
+      base::Variant::MakeArrayBuffer(data, length)));
+  result.AsObject().SetPrototype(GetPrototype());
+  return result;
+}
+
+Bytes::Value Bytes::New(size_t length) {
+  base::Variant result(base::Variant::MakeUint8Array(
+      base::Variant::MakeArrayBuffer(length)));
+  result.AsObject().SetPrototype(GetPrototype());
+  return result;
 }
 
 Bytes* Bytes::FromContext(v8::Handle<v8::Context> context) {
   return BuiltIn::FromContext(context)->bytes();
 }
 
-Bytes::Instance* Bytes::constructor(
-    Bytes*, unsigned length) {
-  return new Instance(std::string(length, '\0'));
+Bytes::Value Bytes::constructor(
+    Bytes* bytes, size_t length) {
+  return bytes->New(length);
 }
 
-std::string Bytes::decode(Instance* bytes, Optional<std::string> encoding) {
+std::string Bytes::decode(Value instance, Optional<std::string> encoding) {
   if (!encoding.specified() ||
       encoding.value() == "ascii" ||
-      encoding.value() == "utf-8")
-    return bytes->data;
-  else
+      encoding.value() == "utf-8") {
+    return std::string(static_cast<const char*>(instance.data()),
+                       instance.length());
+  } else {
     throw base::TypeError("unsupported encoding");
+  }
 }
 
-Bytes::Instance* Bytes::slice(Instance* instance, Optional<unsigned> offset,
-                              Optional<unsigned> length) {
-  unsigned use_offset;
+Bytes::Value Bytes::slice(Value instance, Optional<size_t> offset,
+                          Optional<size_t> length) {
+  size_t use_offset;
 
   if (offset.specified())
-    use_offset = std::min(static_cast<unsigned>(instance->data.length()),
-                          offset.value());
+    use_offset = std::min(instance.length(), offset.value());
   else
     use_offset = 0;
 
-  unsigned use_length = instance->data.length() - use_offset;
+  size_t use_length = instance.length() - use_offset;
 
   if (length.specified())
     use_length = std::min(use_length, length.value());
 
-  return instance->GetClass()->New(
-      std::string(instance->data, use_offset, use_length));
+  return Bytes::FromContext()->New(
+      static_cast<char*>(instance.data()) + use_offset, use_length);
 }
 
-Bytes::Instance* Bytes::concat(Instance* instance, Instance* other) {
-  return instance->GetClass()->New(instance->data + other->data);
+Bytes::Value Bytes::concat(Value instance, Value other) {
+  Value result(Bytes::FromContext()->New(instance.length() + other.length()));
+  std::copy(static_cast<char*>(instance.data()),
+            static_cast<char*>(instance.data()) + instance.length(),
+            static_cast<char*>(result.data()));
+  std::copy(static_cast<char*>(other.data()),
+            static_cast<char*>(other.data()) + other.length(),
+            static_cast<char*>(result.data()) + instance.length());
+  return result;
 }
 
-std::string Bytes::toJSON(Instance* instance) {
-  return instance->data;
+std::string Bytes::toJSON(Value instance) {
+  return std::string(static_cast<char*>(instance.data()), instance.length());
 }
 
-Bytes::Instance* Bytes::encode(Bytes* cls, std::string data,
-                               Optional<std::string> encoding) {
+Bytes::Value Bytes::encode(Bytes* cls, std::string data,
+                           Optional<std::string> encoding) {
   if (!encoding.specified() ||
       encoding.value() == "utf-8")
     return cls->New(data);
   else
     throw base::TypeError("unsupported encoding");
-}
-
-unsigned Bytes::get_length(Bytes::Instance* instance) {
-  return instance->data.length();
 }
 
 }
@@ -145,19 +139,17 @@ namespace conversions {
 using namespace modules::builtin;
 
 template <>
-Bytes::Instance* as_value(
-    const base::Variant& value, Bytes::Instance**) {
+Bytes::Value as_value(const base::Variant& value, Bytes::Value*) {
   Bytes* bytes = Bytes::FromContext();
-  if (!value.IsObject() || !bytes->HasInstance(value.AsObject()))
+  if (!value.IsObject() ||
+      !(value.IsArrayBuffer() || value.IsArrayBufferView()))
     return bytes->New(value.AsString());
-  return Bytes::Instance::FromObject(bytes, value.AsObject());
+  return Bytes::Value(value);
 }
 
 template <>
-base::Variant as_result(Bytes::Instance* result) {
-  if (!result)
-    return base::Variant::Null();
-  return result->GetObject();
+base::Variant as_result(Bytes::Value result) {
+  return result;
 }
 
 }

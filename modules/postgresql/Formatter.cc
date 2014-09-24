@@ -43,9 +43,9 @@ std::string Formatter::Replace(std::string directive,
       double seconds = value.AsNumber() / 1000;
       Add(base::Variant::Number(seconds).AsString() + " seconds", false);
     } else if (directive == "%b") {
-      builtin::Bytes::Instance* bytes =
-          base::AsValue<builtin::Bytes::Instance*>(value.handle());
-      Add(builtin::Bytes::data(bytes), true);
+      builtin::Bytes::Value bytes =
+          base::AsValue<builtin::Bytes::Value>(value.handle());
+      Add(bytes, true);
     } else {
       Add(utilities::Formatter::Replace(directive, value), false);
     }

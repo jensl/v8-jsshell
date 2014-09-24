@@ -157,12 +157,12 @@ void Request::setRequestHeader(Instance* instance, std::string name,
 }
 
 void Request::setRequestBody(Instance* instance,
-                             builtin::Bytes::Instance* value) {
+                             builtin::Bytes::Value value) {
   if (instance->method != "POST" && instance->method != "PUT")
     throw URLError("invalid call to setRequestBody(); "
                    "method must be \"POST\" or \"PUT\"");
 
-  instance->request_body = builtin::Bytes::data(value);
+  instance->request_body = value;
 }
 
 void Request::perform(Instance* instance) {
@@ -267,7 +267,7 @@ base::Object Request::get_responseHeaders(Instance* instance) {
   return result;
 }
 
-builtin::Bytes::Instance* Request::get_responseBody(Instance* instance) {
+builtin::Bytes::Value Request::get_responseBody(Instance* instance) {
   if (!instance->performed)
     throw URLError("request not performed yet");
 

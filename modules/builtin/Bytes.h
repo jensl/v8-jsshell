@@ -29,32 +29,51 @@ class Module;
 
 class Bytes : public api::Class {
  public:
-  class Instance;
+  class Value {
+   public:
+    Value() {
+    }
+
+    Value(base::Variant value)
+        : value_(value) {
+    }
+
+    void* data();
+    size_t length();
+
+    operator std::string() {
+      return std::string(static_cast<char*>(data()), length());
+    }
+
+    operator base::Variant() {
+      return value_;
+    }
+
+   private:
+    base::Variant value_;
+  };
 
   Bytes();
 
-  static const std::string& data(Instance* instance);
-
-  Bytes::Instance* New(const std::string& data);
+  Value New(const std::string& data);
+  Value New(const void* data, size_t length);
+  Value New(size_t length);
 
   static Bytes* FromContext(
       v8::Handle<v8::Context> context = v8::Handle<v8::Context>());
 
  private:
-  static Instance* constructor(Bytes*, unsigned length);
+  static Value constructor(Bytes*, size_t length);
 
-  static std::string decode(Instance* instance, Optional<std::string> encoding);
+  static std::string decode(Value, Optional<std::string> encoding);
 
-  static Instance* slice(Instance* instance, Optional<unsigned> offset,
-                         Optional<unsigned> length);
-  static Instance* concat(Instance* instance, Instance* other);
+  static Value slice(Value, Optional<size_t> offset, Optional<size_t> length);
+  static Value concat(Value instance, Value other);
 
-  static std::string toJSON(Instance* instance);
+  static std::string toJSON(Value);
 
-  static Instance* encode(Bytes* cls, std::string data,
-                          Optional<std::string> encoding);
-
-  static unsigned get_length(Bytes::Instance* instance);
+  static Value encode(Bytes* cls, std::string data,
+                      Optional<std::string> encoding);
 };
 
 }
@@ -65,11 +84,11 @@ namespace conversions {
 using namespace modules::builtin;
 
 template <>
-Bytes::Instance* as_value(
-    const base::Variant& value, Bytes::Instance**);
+Bytes::Value as_value(
+    const base::Variant& value, Bytes::Value*);
 
 template <>
-base::Variant as_result(Bytes::Instance* result);
+base::Variant as_result(Bytes::Value result);
 
 }
 

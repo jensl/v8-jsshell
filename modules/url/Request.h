@@ -48,12 +48,12 @@ class Request : public api::Class {
   static void setRequestHeader(Instance* instance, std::string name,
                                std::string value);
   static void setRequestBody(Instance* instance,
-                             builtin::Bytes::Instance* value);
+                             builtin::Bytes::Value value);
   static void perform(Instance* instance);
 
   static std::string get_statusLine(Instance* instance);
   static base::Object get_responseHeaders(Instance* instance);
-  static builtin::Bytes::Instance* get_responseBody(Instance* instance);
+  static builtin::Bytes::Value get_responseBody(Instance* instance);
 
   static void HandleOptions(Request::Instance* instance,
                             const utilities::Options& options);

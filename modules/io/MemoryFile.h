@@ -48,14 +48,14 @@ class MemoryFile : public api::Class {
 
  private:
   static Instance* constructor(MemoryFile*,
-                               Optional<builtin::Bytes::Instance*> value);
+                               Optional<builtin::Bytes::Value> value);
 
-  static builtin::Bytes::Instance* read(Instance* instance,
-                                        Optional<unsigned> buflen);
-  static void write(Instance* file, builtin::Bytes::Instance* bytes);
+  static builtin::Bytes::Value read(Instance* instance,
+                                    Optional<unsigned> buflen);
+  static void write(Instance* file, builtin::Bytes::Value bytes);
   static void close(Instance* file);
 
-  static builtin::Bytes::Instance* get_value(Instance*);
+  static builtin::Bytes::Value get_value(Instance*);
 };
 
 }

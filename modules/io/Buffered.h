@@ -36,8 +36,8 @@ class Buffered : public api::Class {
  private:
   static Instance* constructor(Buffered*, base::Variant source);
 
-  static builtin::Bytes::Instance* read(Instance* instance,
-                                        Optional<unsigned> nbytes);
+  static builtin::Bytes::Value read(Instance* instance,
+                                    Optional<unsigned> nbytes);
 
   static base::Variant readln(Instance* instance);
 };
