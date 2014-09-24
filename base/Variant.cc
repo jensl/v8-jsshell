@@ -97,6 +97,54 @@ bool Variant::IsExternal() const {
   return handle_->IsExternal();
 }
 
+bool Variant::IsArrayBuffer() const {
+  return handle_->IsArrayBuffer();
+}
+
+bool Variant::IsArrayBufferView() const {
+  return handle_->IsArrayBufferView();
+}
+
+bool Variant::IsTypedArray() const {
+  return handle_->IsTypedArray();
+}
+
+bool Variant::IsUint8Array() const {
+  return handle_->IsUint8Array();
+}
+
+bool Variant::IsUint8ClampedArray() const {
+  return handle_->IsUint8ClampedArray();
+}
+
+bool Variant::IsInt8Array() const {
+  return handle_->IsInt8Array();
+}
+
+bool Variant::IsUint16Array() const {
+  return handle_->IsUint16Array();
+}
+
+bool Variant::IsInt16Array() const {
+  return handle_->IsInt16Array();
+}
+
+bool Variant::IsUint32Array() const {
+  return handle_->IsUint32Array();
+}
+
+bool Variant::IsInt32Array() const {
+  return handle_->IsInt32Array();
+}
+
+bool Variant::IsFloat32Array() const {
+  return handle_->IsFloat32Array();
+}
+
+bool Variant::IsFloat64Array() const {
+  return handle_->IsFloat64Array();
+}
+
 namespace {
 
 enum class Hint {
@@ -193,6 +241,188 @@ std::string Variant::AsJSON() const {
   base::Object json(base::Object::GlobalObject().Get("JSON").AsObject());
 
   return json.Call("stringify", { *this }).AsString();
+}
+
+namespace {
+
+class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
+ public:
+  virtual void* Allocate(size_t length) override {
+    char* buffer = new char[length];
+    std::fill(buffer, buffer + length, 0);
+    return buffer;
+  }
+
+  virtual void* AllocateUninitialized(size_t length) override {
+    return new char[length];
+  }
+
+  virtual void Free(void* data, size_t length) override {
+    delete[] static_cast<char*>(data);
+  }
+};
+
+ArrayBufferAllocator* array_buffer_allocator;
+
+class ArrayBuffer {
+ public:
+  ArrayBuffer(v8::Handle<v8::ArrayBuffer> handle,
+              void* data, size_t length)
+      : handle_(v8::Isolate::GetCurrent(), handle),
+        data_(data),
+        length_(length) {
+    handle_.SetWeak(this, Destroy);
+    handle->SetAlignedPointerInInternalField(0, this);
+  }
+
+  static void Destroy(
+      const v8::WeakCallbackData<v8::ArrayBuffer, ArrayBuffer>& data) {
+    ArrayBuffer* array_buffer = data.GetParameter();
+    array_buffer_allocator->Free(array_buffer->data_, array_buffer->length_);
+    delete array_buffer;
+  }
+
+  void* data() const { return data_; }
+  size_t length() const { return length_; }
+
+  static ArrayBuffer* Get(v8::Handle<v8::ArrayBuffer> value) {
+    if (value->IsExternal()) {
+      return static_cast<ArrayBuffer*>(
+          value->GetAlignedPointerFromInternalField(0));
+    } else {
+      v8::ArrayBuffer::Contents contents(value->Externalize());
+      return new ArrayBuffer(value, contents.Data(), contents.ByteLength());
+    }
+  }
+
+ private:
+  v8::Persistent<v8::ArrayBuffer> handle_;
+  void* data_;
+  size_t length_;
+};
+
+}
+
+Object Variant::MakeArrayBuffer(const void* data_in, size_t length) {
+  void* data = array_buffer_allocator->AllocateUninitialized(length);
+  std::copy(static_cast<const char*>(data_in),
+            static_cast<const char*>(data_in) + length,
+            static_cast<char*>(data));
+  v8::Handle<v8::ArrayBuffer> value =
+      v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), data, length);
+  new ArrayBuffer(value, data, length);
+  return value;
+}
+
+Object Variant::MakeArrayBuffer(size_t length) {
+  void* data = array_buffer_allocator->Allocate(length);
+  v8::Handle<v8::ArrayBuffer> value =
+      v8::ArrayBuffer::New(v8::Isolate::GetCurrent(), data, length);
+  new ArrayBuffer(value, data, length);
+  return value;
+}
+
+void* Variant::ExtractArrayBufferData() const {
+  v8::Handle<v8::ArrayBuffer> value;
+  size_t offset;
+
+  if (handle_->IsArrayBuffer()) {
+    value = v8::Handle<v8::ArrayBuffer>::Cast(handle_);
+    offset = 0;
+  } else if (handle_->IsArrayBufferView()) {
+    v8::ArrayBufferView* view = v8::ArrayBufferView::Cast(*handle_);
+    value = view->Buffer();
+    offset = view->ByteOffset();
+  } else {
+    throw TypeError("Object is not ArrayBuffer or ArrayBufferView");
+  }
+
+  return static_cast<char*>(ArrayBuffer::Get(value)->data()) + offset;
+}
+
+size_t Variant::ExtractArrayBufferLength() const {
+  if (handle_->IsArrayBuffer())
+    return v8::ArrayBuffer::Cast(*handle_)->ByteLength();
+  else if (handle_->IsArrayBufferView())
+    return v8::ArrayBufferView::Cast(*handle_)->ByteLength();
+  else
+    throw TypeError("Object is not ArrayBuffer or ArrayBufferView");
+}
+
+namespace {
+
+template<typename V8Type, unsigned ElementSize>
+Object MakeTypedArray(Variant array_buffer, size_t byte_offset, size_t length) {
+  if (array_buffer.IsEmpty())
+    array_buffer = Variant::MakeArrayBuffer(byte_offset + ElementSize * length);
+  else if (!array_buffer.IsArrayBuffer())
+    throw TypeError("Object is not ArrayBuffer");
+
+  size_t array_buffer_length = array_buffer.ExtractArrayBufferLength();
+
+  if (length == static_cast<size_t>(-1))
+    length = array_buffer_length / ElementSize;
+  else if (byte_offset + ElementSize * length > array_buffer_length)
+    throw RangeError("requested ArrayBufferView extend beyond ArrayBuffer");
+
+  return V8Type::New(v8::Handle<v8::ArrayBuffer>::Cast(array_buffer.handle()),
+                     byte_offset, length);
+}
+
+} // namespace
+
+Object Variant::MakeUint8Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Uint8Array, 1>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeUint8ClampedArray(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Uint8ClampedArray, 1>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeInt8Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Int8Array, 1>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeUint16Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Uint16Array, 2>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeInt16Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Int16Array, 2>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeUint32Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Uint32Array, 4>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeInt32Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Int32Array, 4>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeFloat32Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Float32Array, 4>(
+      array_buffer, byte_offset, length);
+}
+
+Object Variant::MakeFloat64Array(
+    Variant array_buffer, size_t byte_offset, size_t length) {
+  return MakeTypedArray<v8::Float64Array, 8>(
+      array_buffer, byte_offset, length);
 }
 
 Optional<Variant> Variant::FromJSON(std::string json_string) {
@@ -318,7 +548,9 @@ void Variant::SetObject(base::Object value) {
   handle_ = value.handle_;
 }
 
-void Variant::Initialize() {
+void Variant::PreInitialize(v8::Isolate::CreateParams& create_params) {
+  array_buffer_allocator = new ArrayBufferAllocator;
+  create_params.array_buffer_allocator = array_buffer_allocator;
 }
 
 }

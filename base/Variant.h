@@ -58,6 +58,18 @@ class Variant {
   bool IsDateObject() const;
   bool IsRegExpObject() const;
   bool IsExternal() const;
+  bool IsArrayBuffer() const;
+  bool IsArrayBufferView() const;
+  bool IsTypedArray() const;
+  bool IsUint8Array() const;
+  bool IsUint8ClampedArray() const;
+  bool IsInt8Array() const;
+  bool IsUint16Array() const;
+  bool IsInt16Array() const;
+  bool IsUint32Array() const;
+  bool IsInt32Array() const;
+  bool IsFloat32Array() const;
+  bool IsFloat64Array() const;
 
   bool AsBoolean() const;
   double AsNumber() const;
@@ -67,6 +79,39 @@ class Variant {
   std::string AsString() const;
   base::Object AsObject() const;
   std::string AsJSON() const;
+
+  static base::Object MakeArrayBuffer(const void* data, size_t length);
+  static base::Object MakeArrayBuffer(size_t length);
+  void* ExtractArrayBufferData() const;
+  size_t ExtractArrayBufferLength() const;
+
+  static base::Object MakeUint8Array(Variant array_buffer,
+                                     size_t byte_offset = 0,
+                                     size_t length = -1);
+  static base::Object MakeUint8ClampedArray(Variant array_buffer,
+                                            size_t byte_offset = 0,
+                                            size_t length = -1);
+  static base::Object MakeInt8Array(Variant array_buffer,
+                                    size_t byte_offset = 0,
+                                    size_t length = -1);
+  static base::Object MakeUint16Array(Variant array_buffer,
+                                      size_t byte_offset = 0,
+                                      size_t length = -1);
+  static base::Object MakeInt16Array(Variant array_buffer,
+                                     size_t byte_offset = 0,
+                                     size_t length = -1);
+  static base::Object MakeUint32Array(Variant array_buffer,
+                                      size_t byte_offset = 0,
+                                      size_t length = -1);
+  static base::Object MakeInt32Array(Variant array_buffer,
+                                     size_t byte_offset = 0,
+                                     size_t length = -1);
+  static base::Object MakeFloat32Array(Variant array_buffer,
+                                       size_t byte_offset = 0,
+                                       size_t length = -1);
+  static base::Object MakeFloat64Array(Variant array_buffer,
+                                       size_t byte_offset = 0,
+                                       size_t length = -1);
 
   Variant ToBoolean() const;
   Variant ToNumber() const;
