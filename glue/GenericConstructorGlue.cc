@@ -18,16 +18,13 @@
 */
 
 #include "Base.h"
-#include "glue/GenericMethodGlue.h"
+#include "glue/GenericConstructorGlue.h"
 
 namespace glue {
 
-void GenericMethodGlue::AddTo(std::string name,
-                              v8::Local<v8::Template> target) {
-  v8::Local<v8::FunctionTemplate> function =
-      v8::FunctionTemplate::New(
-          CurrentIsolate(), invocation_callback_, data_);
-  target->Set(CurrentIsolate(), name.c_str(), function);
+void GenericConstructorGlue::SetCallHandler(
+    v8::Handle<v8::FunctionTemplate> target) const {
+  target->SetCallHandler(invocation_callback_, data_);
 }
 
 }

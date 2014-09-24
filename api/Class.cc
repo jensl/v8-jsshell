@@ -57,7 +57,7 @@ base::Object Class::GetPrototype() {
   return prototype_value.AsObject();
 }
 
-Class::Class(std::string name, const glue::ConstructorGlue& constructor)
+Class::Class(std::string name)
     : context_(CurrentIsolate(),
                CurrentIsolate()->GetEnteredContext())
     , template_(CurrentIsolate(), v8::FunctionTemplate::New(CurrentIsolate()))
@@ -65,7 +65,15 @@ Class::Class(std::string name, const glue::ConstructorGlue& constructor)
   function_template()->SetClassName(
       base::String::New(name.c_str(), name.length()));
   function_template()->InstanceTemplate()->SetInternalFieldCount(1);
+}
 
+Class::Class(std::string name, const glue::ConstructorGlue& constructor)
+    : Class(name) {
+  constructor.SetCallHandler(function_template());
+}
+
+Class::Class(std::string name, const glue::GenericConstructorGlue& constructor)
+    : Class(name) {
   constructor.SetCallHandler(function_template());
 }
 

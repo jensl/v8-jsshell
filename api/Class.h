@@ -24,6 +24,7 @@
 
 namespace glue {
 class ConstructorGlue;
+class GenericConstructorGlue;
 }
 
 namespace api {
@@ -89,6 +90,10 @@ class Class {
         typename ActualClass::Instance* (*callback)(ActualClass*,
                                                     Arguments ...));
 
+  template <typename ActualClass, typename ... Arguments>
+  Class(std::string name,
+        typename ActualClass::Value (*callback)(ActualClass*, Arguments ...));
+
   void Inherit(Class* parent);
   void Inherit(base::Object parent);
 
@@ -96,6 +101,11 @@ class Class {
   void AddMethod(std::string name,
                  Result (*callback)(typename ActualClass::Instance*,
                                     Arguments ...));
+
+  template <typename ActualClass, typename Result, typename ... Arguments>
+  void AddGenericMethod(std::string name,
+                        Result (*callback)(typename ActualClass::Value,
+                                           Arguments ...));
 
   template <typename ActualClass, typename Result, typename ... Arguments>
   void AddClassFunction(std::string name,
@@ -132,7 +142,9 @@ class Class {
   void ConstructObject(typename ActualClass::Instance* instance);
 
  private:
+  Class(std::string name);
   Class(std::string name, const glue::ConstructorGlue& glue);
+  Class(std::string name, const glue::GenericConstructorGlue& glue);
 
   v8::Local<v8::FunctionTemplate> function_template() {
     return v8::Local<v8::FunctionTemplate>::New(
@@ -200,8 +212,10 @@ typename ActualClass::Instance* Class::Instance<ActualClass>::FromObjectUnsafe(
 }
 
 #include "glue/MethodGlue.h"
+#include "glue/GenericMethodGlue.h"
 #include "glue/FunctionGlue.h"
 #include "glue/ConstructorGlue.h"
+#include "glue/GenericConstructorGlue.h"
 
 namespace api {
 
@@ -213,6 +227,13 @@ void Class::AddMethod(
       .AddTo(name, function_template()->PrototypeTemplate());
 }
 
+template <typename ActualClass, typename Result, typename ... Arguments>
+void Class::AddGenericMethod(
+    std::string name,
+    Result (*callback)(typename ActualClass::Value, Arguments ...)) {
+  glue::GenericMethodGlue(static_cast<ActualClass*>(this), callback)
+      .AddTo(name, function_template()->PrototypeTemplate());
+}
 
 template <typename ActualClass, typename Result, typename ... Arguments>
 void Class::AddClassFunction(
@@ -232,6 +253,14 @@ Class::Class(
     typename ActualClass::Instance* (*callback)(ActualClass*, Arguments ...))
     : Class(name, glue::ConstructorGlue(static_cast<ActualClass*>(this),
                                         callback)) {
+}
+
+template <typename ActualClass, typename ... Arguments>
+Class::Class(
+    std::string name,
+    typename ActualClass::Value (*callback)(ActualClass*, Arguments ...))
+    : Class(name, glue::GenericConstructorGlue(static_cast<ActualClass*>(this),
+                                               callback)) {
 }
 
 template <typename ActualClass, typename Type>

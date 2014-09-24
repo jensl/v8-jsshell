@@ -14,4 +14,6 @@
 
 common_sources += glue/FunctionGlue.cc \
                   glue/MethodGlue.cc \
-                  glue/ConstructorGlue.cc
+                  glue/GenericMethodGlue.cc \
+                  glue/ConstructorGlue.cc \
+                  glue/GenericConstructorGlue.cc
