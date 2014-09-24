@@ -36,6 +36,8 @@
 #include "jsshell/ArgumentsParser.h"
 #include "utilities/Anchor.h"
 
+#include "libplatform/libplatform.h"
+
 void stop() {
   int stop_here = 0;
   (void)stop_here;
@@ -115,7 +117,14 @@ int Main(const std::vector<std::string>& argv,
   parser.AddAlias('e', "evaluate");
   parser.Parse(argv);
 
+  v8::Platform* platform = v8::platform::CreateDefaultPlatform();
+
+  v8::V8::InitializePlatform(platform);
   v8::V8::Initialize();
+
+  v8::Isolate* isolate = v8::Isolate::New();
+  v8::Isolate::Scope isolate_scope(isolate);
+
   v8::V8::SetCaptureStackTraceForUncaughtExceptions(true);
 
   base::Initialize();
