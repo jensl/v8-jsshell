@@ -19,8 +19,6 @@
 
 #include "Base.h"
 
-#include "v8.h"
-
 namespace base {
 
 Error::Error()

@@ -15,4 +15,5 @@
 common_sources += base/Error.cc \
                   base/Variant.cc \
                   base/Object.cc \
-                  base/Function.cc
+                  base/Function.cc \
+                  base/Initialize.cc

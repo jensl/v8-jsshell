@@ -27,6 +27,7 @@
 #include <map>
 
 #include "Base.h"
+#include "Initialize.h"
 
 #include "api/GC.h"
 #include "api/Runtime.h"
@@ -117,7 +118,8 @@ int Main(const std::vector<std::string>& argv,
   v8::V8::Initialize();
   v8::V8::SetCaptureStackTraceForUncaughtExceptions(true);
 
-  api::GC::Initialize();
+  base::Initialize();
+  api::Initialize();
 
   std::map<std::string, bool> features;
   for (auto iter(parser.begin()); iter != parser.end(); ++iter) {

@@ -22,8 +22,6 @@
 
 #include <string>
 
-#include "v8.h"
-
 namespace base {
 
 class Error {

@@ -22,8 +22,6 @@
 
 #include <cstdint>
 
-#include "v8.h"
-
 #include "base/Array.h"
 #include "base/Convert.h"
 

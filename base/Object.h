@@ -25,8 +25,6 @@
 #include <vector>
 #include <map>
 
-#include "v8.h"
-
 namespace base {
 
 class Object {

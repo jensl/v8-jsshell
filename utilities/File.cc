@@ -27,8 +27,6 @@
 
 #include <memory>
 
-#include "v8.h"
-
 namespace utilities {
 
 File::Error::Error(std::string prefix, int errnum)

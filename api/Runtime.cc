@@ -20,8 +20,6 @@
 #include "Base.h"
 #include "api/Runtime.h"
 
-#include "v8.h"
-
 namespace api {
 
 Runtime::Select::Select(Runtime& runtime)

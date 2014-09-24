@@ -17,36 +17,10 @@
 
 */
 
-#ifndef API_RUNTIME_H
-#define API_RUNTIME_H
+#ifndef INITIALIZE_H
+#define INITIALIZE_H
 
-namespace api {
+#include "base/Initialize.h"
+#include "api/Initialize.h"
 
-class Runtime {
- public:
-  class Select {
-   public:
-    explicit Select(Runtime& runtime);
-
-   private:
-    v8::Context::Scope context_scope_;
-  };
-
-  virtual ~Runtime();
-
-  void Start();
-  void Stop();
-
-  base::Object GetGlobalObject();
-
-  v8::Handle<v8::Context> context() {
-    return v8::Local<v8::Context>::New(CurrentIsolate(), context_);
-  }
-
- private:
-  v8::Persistent<v8::Context> context_;
-};
-
-}
-
-#endif // API_RUNTIME_H
+#endif // INITIALIZE_H

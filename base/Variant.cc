@@ -320,4 +320,7 @@ void Variant::SetObject(base::Object value) {
   handle_ = value.handle_;
 }
 
+void Variant::Initialize() {
+}
+
 }

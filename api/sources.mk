@@ -15,4 +15,5 @@
 common_sources += api/Class.cc \
                   api/Module.cc \
                   api/Runtime.cc \
-                  api/GC.cc
+                  api/GC.cc \
+                  api/Initialize.cc

@@ -23,8 +23,6 @@
 #include <string>
 #include <vector>
 
-#include "v8.h"
-
 namespace glue {
 
 class MethodGlue {

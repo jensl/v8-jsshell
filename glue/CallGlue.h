@@ -22,8 +22,6 @@
 
 #include <vector>
 
-#include "v8.h"
-
 namespace glue {
 
 template <typename Result, typename ReturnType>

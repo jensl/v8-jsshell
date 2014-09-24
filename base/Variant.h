@@ -23,8 +23,6 @@
 #include <cstdint>
 #include <string>
 
-#include "v8.h"
-
 template <typename T> class Optional;
 
 namespace base {
@@ -101,6 +99,8 @@ class Variant {
   const v8::Local<v8::Value> handle() const {
     return handle_;
   }
+
+  static void Initialize();
 
  private:
   friend class Object;

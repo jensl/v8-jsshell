@@ -20,8 +20,6 @@
 #ifndef CONVERSIONS_DEFAULT_H
 #define CONVERSIONS_DEFAULT_H
 
-#include "v8.h"
-
 namespace conversions {
 
 template <typename R>

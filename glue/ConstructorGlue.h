@@ -20,8 +20,6 @@
 #ifndef GLUE_CONSTRUCTOR_H
 #define GLUE_CONSTRUCTOR_H
 
-#include "v8.h"
-
 namespace glue {
 
 class ConstructorGlue {
