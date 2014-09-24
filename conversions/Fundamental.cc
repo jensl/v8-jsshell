@@ -42,6 +42,11 @@ std::int64_t as_value(const base::Variant& value, std::int64_t*) {
 }
 
 template <>
+std::size_t as_value(const base::Variant& value, std::size_t*) {
+  return value.AsInteger();
+}
+
+template <>
 double as_value(const base::Variant& value, double*) {
   return value.AsNumber();
 }

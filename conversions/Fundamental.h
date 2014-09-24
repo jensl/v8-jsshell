@@ -44,6 +44,9 @@ template <>
 std::int64_t as_value(const base::Variant& value, std::int64_t*);
 
 template <>
+std::size_t as_value(const base::Variant& value, std::size_t*);
+
+template <>
 double as_value(const base::Variant& value, double*);
 
 template <>
