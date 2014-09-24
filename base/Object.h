@@ -103,6 +103,9 @@ class Object {
   template <typename ValueType>
   static std::map<std::string, ValueType> ToMap(Object object);
 
+  void Seal();
+  void Freeze();
+
  private:
   friend class Variant;
   friend class Persistent;

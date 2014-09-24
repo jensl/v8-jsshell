@@ -219,4 +219,18 @@ Variant Object::Call(std::string method,
   return function.Call(*this, arguments);
 }
 
+void Object::Seal() {
+  Object object(base::Object::GlobalObject().Get("Object").AsObject());
+  Function seal(object.Get("seal").AsObject());
+
+  seal.Call(object, { *this });
+}
+
+void Object::Freeze() {
+  Object object(base::Object::GlobalObject().Get("Object").AsObject());
+  Function seal(object.Get("freeze").AsObject());
+
+  seal.Call(object, { *this });
+}
+
 }

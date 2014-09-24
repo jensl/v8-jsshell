@@ -257,6 +257,8 @@ base::Object Request::get_responseHeaders(Instance* instance) {
       ++iter;
     }
 
+    result.Freeze();
+
     instance->GetObject().PutHidden("responseHeaders", result);
   }
   else
