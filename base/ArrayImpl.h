@@ -28,12 +28,11 @@
 namespace base {
 
 template <typename ValueType>
-Object Array::FromVector(const std::vector<ValueType>& elements,
-                         unsigned flags) {
+Object Array::FromVector(const std::vector<ValueType>& elements) {
   Object array(v8::Array::New(CurrentIsolate(), elements.size()));
 
   for (std::uint32_t index = 0; index < elements.size(); ++index)
-    array.Put(index, AsResult(elements[index]), flags);
+    array.Put(index, AsResult(elements[index]));
 
   return array;
 }

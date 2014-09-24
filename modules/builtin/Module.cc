@@ -294,8 +294,7 @@ base::Variant Module::Load(Instance* instance, std::string path,
 
 base::Variant Module::Eval(Instance* instance, std::string source) {
   api::Runtime::Select select(instance->runtime);
-  v8::Handle<v8::Script> script(
-      v8::Script::Compile(base::String::New(source.c_str(), source.length())));
+  v8::Handle<v8::Script> script(v8::Script::Compile(base::String::New(source)));
 
   if (script.IsEmpty())
     throw base::NestedException();

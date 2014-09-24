@@ -31,8 +31,7 @@ Module::Module(int index, std::string name)
     : index_(index)
     , name_(name)
     , template_(CurrentIsolate(), v8::FunctionTemplate::New(CurrentIsolate())) {
-  function_template()->SetClassName(
-      base::String::New(name.c_str(), name.length()));
+  function_template()->SetClassName(base::String::New(name));
 }
 
 void Module::AddToRuntime(Runtime& runtime) {

@@ -22,6 +22,7 @@
 
 namespace api {
 
+void PreInitialize(v8::Isolate::CreateParams& create_params);
 void Initialize();
 
 }

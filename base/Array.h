@@ -27,8 +27,7 @@ namespace base {
 class Array {
  public:
   template <typename ValueType>
-  static Object FromVector(const std::vector<ValueType>& elements,
-                           unsigned flags = PropertyFlags::kAll);
+  static Object FromVector(const std::vector<ValueType>& elements);
 
   template <typename ValueType>
   static std::vector<ValueType> ToVector(Object object);

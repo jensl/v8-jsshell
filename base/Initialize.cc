@@ -21,8 +21,11 @@
 
 namespace base {
 
+void PreInitialize(v8::Isolate::CreateParams& create_params) {
+  Variant::PreInitialize(create_params);
+}
+
 void Initialize() {
-  Variant::Initialize();
 }
 
 }

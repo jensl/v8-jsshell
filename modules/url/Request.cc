@@ -249,11 +249,11 @@ base::Object Request::get_responseHeaders(Instance* instance) {
       ++iter;
     }
 
-    result = base::Array::FromVector(headers, base::PropertyFlags::kEnumerable);
+    result = base::Array::FromVector(headers);
     iter = instance->response_headers.begin();
 
     while (iter != instance->response_headers.end()) {
-      result.Put(iter->first, iter->second, base::PropertyFlags::kNone);
+      result.Put(iter->first, iter->second);
       ++iter;
     }
 

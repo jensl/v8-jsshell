@@ -32,12 +32,15 @@ public:
   }
 
   v8::Local<v8::String> ToV8() const {
-    return v8::String::NewFromUtf8(CurrentIsolate(), value_.data(),
-                                   v8::String::kNormalString, value_.size());
+    return New(value_);
   }
 
   operator v8::Local<v8::String>() const {
     return ToV8();
+  }
+
+  static v8::Local<v8::String> New(std::string data) {
+    return New(data.data(), data.size());
   }
 
   static v8::Local<v8::String> New(const char* data, int length = -1) {

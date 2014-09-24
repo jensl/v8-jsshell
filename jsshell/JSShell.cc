@@ -122,7 +122,12 @@ int Main(const std::vector<std::string>& argv,
   v8::V8::InitializePlatform(platform);
   v8::V8::Initialize();
 
-  v8::Isolate* isolate = v8::Isolate::New();
+  v8::Isolate::CreateParams create_params;
+
+  base::PreInitialize(create_params);
+  api::PreInitialize(create_params);
+
+  v8::Isolate* isolate = v8::Isolate::New(create_params);
   v8::Isolate::Scope isolate_scope(isolate);
 
   v8::V8::SetCaptureStackTraceForUncaughtExceptions(true);

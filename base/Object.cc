@@ -20,14 +20,6 @@
 #include "Base.h"
 #include "Primitive.h"
 
-namespace {
-
-v8::Local<v8::String> ToString(std::string value) {
-  return base::String::New(value.c_str(), value.length());
-}
-
-}
-
 namespace base {
 
 Object::Persistent::Persistent() {
@@ -87,7 +79,7 @@ bool Object::IsCallable() {
 }
 
 bool Object::HasProperty(std::string name) {
-  return handle_->Has(ToString(name));
+  return handle_->Has(String::New(name));
 }
 
 bool Object::HasProperty(std::uint32_t index) {
@@ -126,7 +118,7 @@ unsigned ConvertPropertyAttributes(v8::PropertyAttribute attributes) {
 
 unsigned Object::GetPropertyFlags(std::string name) {
   if (HasProperty(name)) {
-    v8::Local<v8::Value> key(base::String::New(name.c_str(), name.length()));
+    v8::Local<v8::Value> key(base::String::New(name));
     v8::PropertyAttribute attributes = handle_->GetPropertyAttributes(key);
     return ConvertPropertyAttributes(attributes);
   } else {
@@ -145,7 +137,7 @@ unsigned Object::GetPropertyFlags(std::uint32_t name) {
 }
 
 Variant Object::Get(std::string name) {
-  return handle_->Get(ToString(name));
+  return handle_->Get(String::New(name));
 }
 
 Variant Object::Get(std::uint32_t index) {

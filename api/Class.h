@@ -63,7 +63,7 @@ class Class {
 
    private:
     static void CleanUp(
-        const v8::WeakCallbackInfo<Class::Instance<ActualClass>*>&);
+        const v8::WeakCallbackInfo<Class::Instance<ActualClass>>&);
   };
 
   v8::Local<v8::Context> context() {
@@ -188,7 +188,7 @@ ActualClass* Class::Instance<ActualClass>::GetClass() {
 
 template <typename ActualClass>
 void Class::Instance<ActualClass>::CleanUp(
-    const v8::WeakCallbackInfo<Class::Instance<ActualClass>*>& data) {
+    const v8::WeakCallbackInfo<Class::Instance<ActualClass>>& data) {
   data.GetParameter()->object_.Reset();
   delete data.GetParameter();
 }
@@ -311,7 +311,7 @@ void Class::AddProperty(std::string name,
 
     void AddTo(std::string name, v8::Handle<v8::FunctionTemplate> target) {
       target->InstanceTemplate()->SetAccessor(
-          base::String::New(name.c_str(), name.length()),
+          base::String::New(name),
           getter_ ? &getter : NULL,
           setter_ ? &setter : NULL,
           Data(),
@@ -368,7 +368,7 @@ void Class::AddNamedHandler(
             info.GetIsolate(), names.size()));
         for (unsigned index = 0; index < names.size(); ++index) {
           const std::string& name(names[index]);
-          array->Set(index, base::String::New(name.c_str(), name.length()));
+          array->Set(index, base::String::New(name));
         }
         info.GetReturnValue().Set(handle_scope.Escape(array));
       } catch (base::Error& error) {
@@ -611,7 +611,7 @@ void Class::AddClassProperty(std::string name,
   };
 
   function_template()->GetFunction()->SetAccessor(
-      base::String::New(name.c_str(), name.length()),
+      base::String::New(name),
       &Wrapper::getter,
       NULL,
       (new Wrapper(static_cast<ActualClass*>(this), getter))->Data(),

@@ -62,8 +62,7 @@ Class::Class(std::string name)
                CurrentIsolate()->GetEnteredContext())
     , template_(CurrentIsolate(), v8::FunctionTemplate::New(CurrentIsolate()))
     , name_(name) {
-  function_template()->SetClassName(
-      base::String::New(name.c_str(), name.length()));
+  function_template()->SetClassName(base::String::New(name));
   function_template()->InstanceTemplate()->SetInternalFieldCount(1);
 }
 

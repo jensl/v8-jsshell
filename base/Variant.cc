@@ -271,12 +271,12 @@ class ArrayBuffer {
       : handle_(v8::Isolate::GetCurrent(), handle),
         data_(data),
         length_(length) {
-    handle_.SetWeak(this, Destroy);
+    handle_.SetWeak(this, Destroy, v8::WeakCallbackType::kParameter);
     handle->SetAlignedPointerInInternalField(0, this);
   }
 
   static void Destroy(
-      const v8::WeakCallbackData<v8::ArrayBuffer, ArrayBuffer>& data) {
+      const v8::WeakCallbackInfo<ArrayBuffer>& data) {
     ArrayBuffer* array_buffer = data.GetParameter();
     array_buffer_allocator->Free(array_buffer->data_, array_buffer->length_);
     delete array_buffer;
@@ -509,7 +509,7 @@ Variant Variant::UInt32(std::uint32_t value) {
 
 Variant Variant::String(std::string value) {
   Variant result;
-  result.handle_ = base::String::New(value.c_str(), value.length());
+  result.handle_ = base::String::New(value);
   return result;
 }
 
@@ -541,7 +541,7 @@ void Variant::SetUInt32(std::uint32_t value) {
 }
 
 void Variant::SetString(std::string value) {
-  handle_ = base::String::New(value.c_str(), value.length());
+  handle_ = base::String::New(value);
 }
 
 void Variant::SetObject(base::Object value) {

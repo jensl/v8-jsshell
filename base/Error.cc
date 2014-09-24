@@ -40,7 +40,7 @@ TypeError& TypeError::operator<< (const std::string& string) {
 
 void TypeError::Raise() {
   CurrentIsolate()->ThrowException(v8::Exception::TypeError(
-      base::String::New(message().c_str(), message().length())));
+base::String::New(message())));
 }
 
 ReferenceError::ReferenceError(std::string message)
@@ -54,7 +54,7 @@ ReferenceError& ReferenceError::operator<< (const std::string& string) {
 
 void ReferenceError::Raise() {
   CurrentIsolate()->ThrowException(v8::Exception::ReferenceError(
-      base::String::New(message().c_str(), message().length())));
+      base::String::New(message())));
 }
 
 SyntaxError::SyntaxError(std::string message)
@@ -68,7 +68,7 @@ SyntaxError& SyntaxError::operator<< (const std::string& string) {
 
 void SyntaxError::Raise() {
   CurrentIsolate()->ThrowException(v8::Exception::SyntaxError(
-      base::String::New(message().c_str(), message().length())));
+      base::String::New(message())));
 }
 
 RangeError::RangeError(std::string message)
@@ -82,7 +82,7 @@ RangeError& RangeError::operator<< (const std::string& string) {
 
 void RangeError::Raise() {
   CurrentIsolate()->ThrowException(v8::Exception::RangeError(
-      base::String::New(message().c_str(), message().length())));
+      base::String::New(message())));
 }
 
 CustomError::CustomError(std::string name)
@@ -100,9 +100,8 @@ void CustomError::Raise() {
 
 v8::Local<v8::Object> CustomError::Create() {
   v8::Local<v8::Object> error(v8::Exception::Error(
-      base::String::New(message().c_str(), message().length()))->ToObject());
-  error->Set(base::String::New("name"),
-             base::String::New(name_.c_str(), name_.length()));
+      base::String::New(message()))->ToObject());
+  error->Set(base::String::New("name"), base::String::New(name_));
   return error;
 }
 

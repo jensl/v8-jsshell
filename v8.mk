@@ -64,7 +64,7 @@ libraries += v8 icuuc icui18n
 lflags += -Wl,-rpath=$(abspath $(v8lib))
 endif
 
-#library_paths += $(v8lib) $(iculib)
+library_paths += $(v8lib) $(iculib)
 #libraries += v8_base.$(v8arch) icui18n icuuc icudata v8_nosnapshot.$(v8arch)
 
 include_paths += v8/include

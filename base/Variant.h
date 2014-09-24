@@ -145,7 +145,7 @@ class Variant {
     return handle_;
   }
 
-  static void Initialize();
+  static void PreInitialize(v8::Isolate::CreateParams& create_params);
 
  private:
   friend class Object;
