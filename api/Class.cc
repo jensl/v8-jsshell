@@ -32,7 +32,7 @@ bool Class::HasInstance(base::Object object) {
 }
 
 void Class::AddTo(base::Object target) {
-  target.Put(name_, function_template()->GetFunction());
+  target.Put(name_, GetConstructor());
 }
 
 void Class::AddTo(Module& module) {
@@ -44,13 +44,17 @@ base::Object Class::NewInstance() {
 }
 
 base::Object Class::NewInstance(
-    const std::vector<base::Variant>& argv_in) {
-  std::vector<v8::Handle<v8::Value>> argv_out;
-  std::vector<base::Variant>::const_iterator iter(argv_in.begin());
-  while (iter != argv_in.end())
-    argv_out.push_back(iter++->handle());
-  return function_template()->GetFunction()->NewInstance(
-      argv_out.size(), argv_out.data());
+    const std::vector<base::Variant>& argv) {
+  return base::Function(GetConstructor()).Construct(argv);
+}
+
+base::Object Class::GetConstructor() {
+  return base::Object(function_template()->GetFunction());
+}
+
+base::Object Class::GetPrototype() {
+  base::Variant prototype_value(GetConstructor().Get("prototype"));
+  return prototype_value.AsObject();
 }
 
 Class::Class(std::string name, const glue::ConstructorGlue& constructor)
@@ -67,6 +71,10 @@ Class::Class(std::string name, const glue::ConstructorGlue& constructor)
 
 void Class::Inherit(Class* parent) {
   function_template()->Inherit(parent->function_template());
+}
+
+void Class::Inherit(base::Object parent) {
+  GetPrototype().SetPrototype(parent);
 }
 
 }

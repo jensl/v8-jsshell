@@ -77,6 +77,9 @@ class Class {
   base::Object NewInstance();
   base::Object NewInstance(const std::vector<base::Variant>& argv);
 
+  base::Object GetConstructor();
+  base::Object GetPrototype();
+
  protected:
   template <typename ActualClass>
   Class(std::string name, ActualClass*);
@@ -87,6 +90,7 @@ class Class {
                                                     Arguments ...));
 
   void Inherit(Class* parent);
+  void Inherit(base::Object parent);
 
   template <typename ActualClass, typename Result, typename ... Arguments>
   void AddMethod(std::string name,

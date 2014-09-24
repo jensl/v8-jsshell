@@ -74,6 +74,10 @@ Object Object::Create() {
   return v8::Object::New(CurrentIsolate());
 }
 
+Object Object::GlobalObject() {
+  return CurrentContext()->Global();
+}
+
 bool Object::IsEmpty() {
   return handle_.IsEmpty();
 }
@@ -195,6 +199,14 @@ Variant Object::GetHidden(std::string name) {
 
 void Object::PutHidden(std::string name, const Variant& value) {
   Check(handle_->SetPrivate(CurrentContext(), Private(name), value.handle()));
+}
+
+Object Object::GetPrototype() {
+  return handle_->GetPrototype().As<v8::Object>();
+}
+
+void Object::SetPrototype(Object prototype) {
+  handle_->SetPrototype(prototype.handle_);
 }
 
 Variant Object::Call(std::string method,

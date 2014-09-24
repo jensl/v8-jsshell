@@ -29,8 +29,8 @@ class Function {
 
   Variant Call(Object this_object,
                const std::vector<Variant>& arguments = std::vector<Variant>());
-  Variant Call(std::string method,
-               const std::vector<Variant>& arguments = std::vector<Variant>());
+  Object Construct(
+      const std::vector<Variant>& arguments = std::vector<Variant>());
 
   Object object() { return object_; }
 

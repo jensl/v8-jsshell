@@ -28,7 +28,7 @@
 namespace base {
 
 template <typename Type>
-Object::Object(v8::Local<Type> handle)
+Object::Object(v8::Handle<Type> handle)
     : handle_(handle) {
 }
 

@@ -50,12 +50,13 @@ class Object {
   Object();
 
   template <typename Type>
-  Object(v8::Local<Type> object);
+  Object(v8::Handle<Type> object);
 
   template <typename Type>
   Object(const v8::Persistent<Type>& object);
 
   static base::Object Create();
+  static base::Object GlobalObject();
 
   bool IsEmpty();
   bool IsCallable();
@@ -85,6 +86,9 @@ class Object {
   Variant GetHidden(std::string name);
   void PutHidden(std::string name, const Variant& value);
 
+  Object GetPrototype();
+  void SetPrototype(Object prototype);
+
   Variant Call(Object this_object,
                const std::vector<Variant>& arguments = std::vector<Variant>());
   Variant Call(std::string method,
@@ -103,7 +107,7 @@ class Object {
   friend class Variant;
   friend class Persistent;
 
-  v8::Local<v8::Object> handle_;
+  v8::Handle<v8::Object> handle_;
 };
 
 template <typename Class>

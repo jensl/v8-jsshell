@@ -190,15 +190,13 @@ base::Object Variant::AsObject() const {
 }
 
 std::string Variant::AsJSON() const {
-  base::Object global(CurrentContext()->Global());
-  base::Object json(global.Get("JSON").AsObject());
+  base::Object json(base::Object::GlobalObject().Get("JSON").AsObject());
 
   return json.Call("stringify", { *this }).AsString();
 }
 
 Optional<Variant> Variant::FromJSON(std::string json_string) {
-  base::Object global(CurrentContext()->Global());
-  base::Object json(global.Get("JSON").AsObject());
+  base::Object json(base::Object::GlobalObject().Get("JSON").AsObject());
 
   v8::TryCatch try_catch;
 

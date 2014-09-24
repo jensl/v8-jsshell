@@ -27,6 +27,22 @@ Function::Function(base::Object object)
     throw base::TypeError("Object is not callable");
 }
 
+namespace {
+
+std::vector<v8::Handle<v8::Value>> ConvertArguments(
+    const std::vector<Variant>& arguments_in) {
+  std::vector<v8::Handle<v8::Value>> arguments_out;
+
+  for (std::vector<Variant>::const_iterator iter = arguments_in.begin();
+       iter != arguments_in.end();
+       ++iter)
+    arguments_out.push_back(iter->handle());
+
+  return arguments_out;
+}
+
+}
+
 Variant Function::Call(Object this_object_in,
                        const std::vector<Variant>& arguments_in) {
   v8::EscapableHandleScope handle_scope(CurrentIsolate());
@@ -39,12 +55,7 @@ Variant Function::Call(Object this_object_in,
 
   v8::Local<v8::Function> function(object_.handle().As<v8::Function>());
 
-  std::vector<v8::Local<v8::Value>> arguments;
-
-  for (std::vector<Variant>::const_iterator iter = arguments_in.begin();
-       iter != arguments_in.end();
-       ++iter)
-    arguments.push_back(iter->handle());
+  std::vector<v8::Local<v8::Value>> arguments(ConvertArguments(arguments_in));
 
   v8::Local<v8::Value> returned(
       function->Call(this_object, arguments.size(), arguments.data()));
@@ -53,6 +64,21 @@ Variant Function::Call(Object this_object_in,
     throw NestedException();
 
   return handle_scope.Escape(returned);
+}
+
+Object Function::Construct(const std::vector<Variant>& arguments_in) {
+  v8::EscapableHandleScope handle_scope(v8::Isolate::GetCurrent());
+  v8::Handle<v8::Function> function(object_.handle().As<v8::Function>());
+
+  std::vector<v8::Handle<v8::Value>> arguments(ConvertArguments(arguments_in));
+
+  v8::Local<v8::Value> returned(
+      function->NewInstance(arguments.size(), arguments.data()));
+
+  if (returned.IsEmpty())
+    throw NestedException();
+
+  return handle_scope.Escape(returned.As<v8::Object>());
 }
 
 }
