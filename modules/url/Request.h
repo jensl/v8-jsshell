@@ -36,6 +36,10 @@ class Request : public api::Class {
   static std::string get(std::string url, const utilities::Options& options);
   static std::string post(std::string url, std::string data,
                           const utilities::Options& options);
+  static std::string put(std::string url, std::string data,
+                          const utilities::Options& options);
+  static std::string doOperation(std::string url, std::string method, std::string data,
+                                 const utilities::Options& options);
 
   static Request* FromContext(
       v8::Handle<v8::Context> context = v8::Handle<v8::Context>());

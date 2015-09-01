@@ -21,6 +21,7 @@
 #include "modules/url/Request.h"
 
 #include <curl/curl.h>
+#include <string.h>
 
 #include "modules/URL.h"
 #include "modules/url/Header.h"
@@ -44,6 +45,7 @@ class Request::Instance : public api::Class::Instance<Request> {
   std::string username;
   std::string password;
   std::string request_body;
+  size_t request_body_sent;
   bool performed;
   std::string status_line;
   std::vector<std::pair<std::string, std::string>> response_headers;
@@ -100,6 +102,19 @@ WriteFunction(void* buffer, size_t size, size_t nmemb, void* data) {
   return size * nmemb;
 }
 
+extern "C" size_t
+ReadFunction(void* buffer, size_t size, size_t nmemb, void* data) {
+  Request::Instance* instance = static_cast<Request::Instance*>(data);
+  size_t to_send = std::min(
+      size * nmemb,
+      instance->request_body.length() - instance->request_body_sent);
+
+  memcpy(buffer,
+         instance->request_body.c_str() + instance->request_body_sent, to_send);
+  instance->request_body_sent += to_send;
+  return to_send;
+}
+
 }
 
 Request::Request()
@@ -114,26 +129,32 @@ Request::Request()
   AddProperty<Request>("responseBody", &get_responseBody);
 }
 
-std::string Request::get(std::string url, const utilities::Options& options) {
-  utilities::Anchor<Instance> instance(new Instance("GET", url));
+std::string Request::doOperation(std::string url, std::string method,
+                                 std::string data,
+                                 const utilities::Options& options) {
+  utilities::Anchor<Instance> instance(new Instance(method, url));
 
   HandleOptions(instance, options);
 
+  if (!data.empty())
+    setRequestBody(instance, builtin::Bytes::FromContext()->New(data));
   perform(instance);
 
   return instance->response_body;
 }
 
+std::string Request::get(std::string url, const utilities::Options& options) {
+  return doOperation(url, "GET", "", options);
+}
+
 std::string Request::post(std::string url, std::string data,
                           const utilities::Options& options) {
-  utilities::Anchor<Instance> instance(new Instance("POST", url));
+  return doOperation(url, "POST", data, options);
+}
 
-  HandleOptions(instance, options);
-
-  setRequestBody(instance, builtin::Bytes::FromContext()->New(data));
-  perform(instance);
-
-  return instance->response_body;
+std::string Request::put(std::string url, std::string data,
+                          const utilities::Options& options) {
+  return doOperation(url, "PUT", data, options);
 }
 
 Request* Request::FromContext(v8::Handle<v8::Context> context) {
@@ -163,6 +184,7 @@ void Request::setRequestBody(Instance* instance,
                    "method must be \"POST\" or \"PUT\"");
 
   instance->request_body = value;
+  instance->request_body_sent = 0;
 }
 
 void Request::perform(Instance* instance) {
@@ -189,15 +211,18 @@ void Request::perform(Instance* instance) {
   }
 
   if (instance->request_body.length()) {
-    if (instance->method == "POST")
+    if (instance->method == "POST") {
       curl_easy_setopt(curl_handle, CURLOPT_POST, 1);
-    else
+      curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS,
+                       instance->request_body.c_str());
+      curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE,
+                       instance->request_body.length());
+    } else {
       curl_easy_setopt(curl_handle, CURLOPT_UPLOAD, 1);
-
-    curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDS,
-                     instance->request_body.c_str());
-    curl_easy_setopt(curl_handle, CURLOPT_POSTFIELDSIZE,
-                     instance->request_body.length());
+      curl_easy_setopt(curl_handle, CURLOPT_READFUNCTION, &ReadFunction);
+      curl_easy_setopt(curl_handle, CURLOPT_READDATA, instance);
+      curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, instance->request_body.length());
+    }
   }
 
   curl_easy_setopt(curl_handle, CURLOPT_URL, instance->url.c_str());

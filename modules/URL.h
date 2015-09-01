@@ -53,6 +53,9 @@ class URL : public api::Module {
   static std::string get(URL*, std::string url, utilities::Options options);
   static std::string post(URL*, std::string url, std::string data,
                           utilities::Options options);
+  static std::string put(URL*, std::string url, std::string data,
+                          utilities::Options options);
+
 };
 
 }

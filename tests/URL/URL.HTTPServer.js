@@ -70,7 +70,7 @@ HTTPServer.prototype.start = function () {
       headers[match[1]] = match[2];
     });
 
-    if (method == "POST") {
+    if (method == "POST" || method == "PUT") {
       body = buffered;
       if ("Content-Length" in headers) {
         var length = parseInt(headers["Content-Length"]);

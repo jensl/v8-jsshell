@@ -81,7 +81,35 @@ test([
 
       assertEquals("Basic Zm9vOmJhcg==", response.headers["Authorization"]);
     });
+  },
+
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+      var response = JSON.parse(URL.put(this.prefix + "/testing", "Alice", {
+	  headers: {"Content-Type": 'text/plain'}
+      }));
+      assertEquals("Alice", response.body);
+      assertEquals("text/plain", response.headers["Content-Type"]);
+    })
+  },
+
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+
+      var payload = "";
+      for (var i = 0; i < 10000; i++) {
+          payload += "Hello world";
+      }
+      var response = JSON.parse(URL.put(this.prefix + "/testing", payload, {
+	  headers: {"Content-Type": 'text/plain'}
+      }));
+      assertEquals(response.body, payload);
+      assertEquals("text/plain", response.headers["Content-Type"]);
+    })
   }
+
 ]);
 
 endScope();
