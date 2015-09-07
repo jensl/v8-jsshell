@@ -157,6 +157,10 @@ std::string Request::put(std::string url, std::string data,
   return doOperation(url, "PUT", data, options);
 }
 
+std::string Request::del(std::string url, const utilities::Options& options) {
+  return doOperation(url, "DELETE", "", options);
+}
+
 Request* Request::FromContext(v8::Handle<v8::Context> context) {
   return URL::FromContext(context)->request();
 }
@@ -223,6 +227,10 @@ void Request::perform(Instance* instance) {
       curl_easy_setopt(curl_handle, CURLOPT_READDATA, instance);
       curl_easy_setopt(curl_handle, CURLOPT_INFILESIZE, instance->request_body.length());
     }
+  }
+
+  if (instance->method == "DELETE") {
+    curl_easy_setopt(curl_handle, CURLOPT_CUSTOMREQUEST, "DELETE");
   }
 
   curl_easy_setopt(curl_handle, CURLOPT_URL, instance->url.c_str());

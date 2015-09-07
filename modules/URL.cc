@@ -44,6 +44,7 @@ void URL::ExtendObject(base::Object target) {
   AddFunction(target, "get", get);
   AddFunction(target, "post", post);
   AddFunction(target, "put", put);
+  AddFunction(target, "delete", del);
 
   request_->AddTo(target);
   header_->AddTo(target);
@@ -70,6 +71,10 @@ std::string URL::post(URL*, std::string url, std::string data,
 std::string URL::put(URL*, std::string url, std::string data,
                      utilities::Options options) {
   return url::Request::put(url, data, options);
+}
+
+std::string URL::del(URL*, std::string url, utilities::Options options) {
+  return url::Request::del(url, options);
 }
 
 }

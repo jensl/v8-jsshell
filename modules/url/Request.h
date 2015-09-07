@@ -37,7 +37,9 @@ class Request : public api::Class {
   static std::string post(std::string url, std::string data,
                           const utilities::Options& options);
   static std::string put(std::string url, std::string data,
-                          const utilities::Options& options);
+                         const utilities::Options& options);
+  static std::string del(std::string url, const utilities::Options& options);
+
   static std::string doOperation(std::string url, std::string method, std::string data,
                                  const utilities::Options& options);
 

@@ -89,6 +89,7 @@ test([
       var response = JSON.parse(URL.put(this.prefix + "/testing", "Alice", {
 	  headers: {"Content-Type": 'text/plain'}
       }));
+      assertEquals(response.method, "PUT");
       assertEquals("Alice", response.body);
       assertEquals("text/plain", response.headers["Content-Type"]);
     })
@@ -105,7 +106,20 @@ test([
       var response = JSON.parse(URL.put(this.prefix + "/testing", payload, {
 	  headers: {"Content-Type": 'text/plain'}
       }));
+      assertEquals(response.method, "PUT");
       assertEquals(response.body, payload);
+      assertEquals("text/plain", response.headers["Content-Type"]);
+    })
+  },
+
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+
+      var response = JSON.parse(URL.delete(this.prefix + "/testing", {
+	  headers: {"Content-Type": 'text/plain'}
+      }));
+      assertEquals("DELETE", response.method);
       assertEquals("text/plain", response.headers["Content-Type"]);
     })
   }

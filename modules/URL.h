@@ -55,6 +55,7 @@ class URL : public api::Module {
                           utilities::Options options);
   static std::string put(URL*, std::string url, std::string data,
                           utilities::Options options);
+  static std::string del(URL*, std::string url, utilities::Options options);
 
 };
 
