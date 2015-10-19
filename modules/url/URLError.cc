@@ -21,6 +21,7 @@
 
 #include "Base.h"
 #include "modules/url/URLError.h"
+#include "modules/url/Request.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -35,9 +36,24 @@ URLError::URLError(std::string message)
   set_message(message);
 }
 
+URLError::URLError(std::string message, base::Variant request)
+    : base::CustomError("URLError")
+    , request_(request) {
+  set_message(message);
+}
+
 URLError::URLError(std::string prefix, CURLcode error)
     : base::CustomError("URLError") {
   set_message(prefix + ": " + curl_easy_strerror(error));
+}
+
+base::Object URLError::Create() {
+  base::Object error(base::CustomError::Create());
+
+  if (!request_.IsEmpty())
+    error.Put("request", request_);
+
+  return error;
 }
 
 URLError& URLError::operator<< (const std::string& string) {

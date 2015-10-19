@@ -20,6 +20,8 @@
 #ifndef MODULES_URL_URLERROR_H
 #define MODULES_URL_URLERROR_H
 
+#include "modules/url/Request.h"
+
 #include <curl/curl.h>
 
 namespace modules {
@@ -28,9 +30,16 @@ namespace url {
 class URLError : public base::CustomError {
  public:
   URLError(std::string message);
+  URLError(std::string message, base::Variant request);
   URLError(std::string prefix, CURLcode error);
 
   URLError& operator<< (const std::string& string);
+
+ protected:
+  base::Object Create() override;
+
+ private:
+  base::Variant request_;
 };
 
 }

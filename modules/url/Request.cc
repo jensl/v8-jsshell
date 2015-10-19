@@ -21,6 +21,7 @@
 #include "modules/url/Request.h"
 
 #include <curl/curl.h>
+#include <stdexcept>
 #include <string.h>
 
 #include "modules/URL.h"
@@ -36,7 +37,8 @@ class Request::Instance : public api::Class::Instance<Request> {
   Instance(std::string method, std::string url)
       : method(method)
       , url(url)
-      , performed(false) {
+      , performed(false)
+      , status_code(0) {
   }
 
   std::string method;
@@ -48,6 +50,7 @@ class Request::Instance : public api::Class::Instance<Request> {
   size_t request_body_sent;
   bool performed;
   std::string status_line;
+  int status_code;
   std::vector<std::pair<std::string, std::string>> response_headers;
   std::string response_body;
 };
@@ -76,6 +79,17 @@ HeaderFunction(void* buffer, size_t size, size_t nmemb, void* data) {
   if (line.compare(0, 5, "HTTP/") == 0) {
     instance->status_line = line;
     instance->response_headers.clear();
+
+    std::string::size_type space1 = line.find(" ");
+    std::string::size_type space2 = line.find(" ", space1 + 1);
+    if (space1 != std::string::npos && space2 != std::string::npos) {
+      std::string status_code_str(line, space1 + 1, space2 - space1 - 1);
+      try {
+        instance->status_code = std::stoi(status_code_str);
+      } catch (const std::logic_error& error) {
+        // ignore possible invalid_argument and out_of_range exception
+      }
+    }
   } else if (line.length()) {
     std::string::size_type colon = line.find(":");
     std::string::size_type start(colon + 1);
@@ -125,14 +139,21 @@ Request::Request()
   AddMethod<Request>("perform", &perform);
 
   AddProperty<Request>("statusLine", &get_statusLine);
+  AddProperty<Request>("statusCode", &get_statusCode);
   AddProperty<Request>("responseHeaders", &get_responseHeaders);
   AddProperty<Request>("responseBody", &get_responseBody);
 }
 
-std::string Request::doOperation(std::string url, std::string method,
+Request::Instance* Request::New(std::string method, std::string url) {
+    Instance* instance = new Instance(method, url);
+    instance->CreateObject(this);
+    return instance;
+}
+
+std::string Request::doOperation(std::string method, std::string url,
                                  std::string data,
                                  const utilities::Options& options) {
-  utilities::Anchor<Instance> instance(new Instance(method, url));
+  Request::Instance* instance = Request::FromContext()->New(method, url);
 
   HandleOptions(instance, options);
 
@@ -140,25 +161,28 @@ std::string Request::doOperation(std::string url, std::string method,
     setRequestBody(instance, builtin::Bytes::FromContext()->New(data));
   perform(instance);
 
+  if (instance->status_code / 100 != 2)
+    throw URLError("request failed", instance);
+
   return instance->response_body;
 }
 
 std::string Request::get(std::string url, const utilities::Options& options) {
-  return doOperation(url, "GET", "", options);
+  return doOperation("GET", url, "", options);
 }
 
 std::string Request::post(std::string url, std::string data,
                           const utilities::Options& options) {
-  return doOperation(url, "POST", data, options);
+  return doOperation("POST", url, data, options);
 }
 
 std::string Request::put(std::string url, std::string data,
                           const utilities::Options& options) {
-  return doOperation(url, "PUT", data, options);
+  return doOperation("PUT", url, data, options);
 }
 
 std::string Request::del(std::string url, const utilities::Options& options) {
-  return doOperation(url, "DELETE", "", options);
+  return doOperation("DELETE", url, "", options);
 }
 
 Request* Request::FromContext(v8::Handle<v8::Context> context) {
@@ -264,6 +288,13 @@ std::string Request::get_statusLine(Instance* instance) {
   return instance->status_line;
 }
 
+int Request::get_statusCode(Instance* instance) {
+  if (!instance->performed)
+    throw URLError("request not performed yet");
+
+  return instance->status_code;
+}
+
 base::Object Request::get_responseHeaders(Instance* instance) {
   if (!instance->performed)
     throw URLError("request not performed yet");
@@ -323,4 +354,26 @@ void Request::HandleOptions(Instance* instance,
 }
 
 }
+}
+
+
+namespace conversions {
+
+using namespace modules::url;
+
+template <>
+Request::Instance* as_value(const base::Variant& value, Request::Instance**) {
+  Request* request = Request::FromContext();
+  if (!value.IsObject() || !request->HasInstance(value.AsObject()))
+    throw base::TypeError("invalid argument, expected Request object");
+  return Request::Instance::FromObject(request, value.AsObject());
+}
+
+template <>
+base::Variant as_result(Request::Instance* result) {
+  if (!result)
+    return base::Variant::Null();
+  return result->GetObject().handle();
+}
+
 }

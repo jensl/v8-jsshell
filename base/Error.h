@@ -29,10 +29,13 @@ class Error {
   Error();
   explicit Error(std::string message);
 
-  virtual void Raise() = 0;
+  void Raise();
 
   std::string message() { return message_; }
   void set_message(std::string message) { message_ = message; }
+
+ protected:
+  virtual Object Create() = 0;
 
  private:
   std::string message_;
@@ -44,7 +47,8 @@ class TypeError : public Error {
 
   TypeError& operator<< (const std::string& string);
 
-  virtual void Raise();
+ protected:
+  Object Create() override;
 };
 
 class ReferenceError : public Error {
@@ -53,7 +57,8 @@ class ReferenceError : public Error {
 
   ReferenceError& operator<< (const std::string& string);
 
-  virtual void Raise();
+ protected:
+  Object Create() override;
 };
 
 class SyntaxError : public Error {
@@ -62,7 +67,8 @@ class SyntaxError : public Error {
 
   SyntaxError& operator<< (const std::string& string);
 
-  virtual void Raise();
+ protected:
+  Object Create() override;
 };
 
 class RangeError : public Error {
@@ -71,7 +77,8 @@ class RangeError : public Error {
 
   RangeError& operator<< (const std::string& string);
 
-  virtual void Raise();
+ protected:
+  Object Create() override;
 };
 
 class CustomError : public Error {
@@ -79,9 +86,8 @@ class CustomError : public Error {
   explicit CustomError(std::string name);
   CustomError(std::string name, std::string message);
 
-  virtual void Raise();
-
-  v8::Local<v8::Object> Create();
+ protected:
+  Object Create() override;
 
  private:
   std::string name_;

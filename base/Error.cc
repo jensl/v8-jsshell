@@ -29,6 +29,10 @@ Error::Error(std::string message)
     : message_(message) {
 }
 
+void Error::Raise() {
+  CurrentIsolate()->ThrowException(Create().handle());
+}
+
 TypeError::TypeError(std::string message)
     : Error(message) {
 }
@@ -38,9 +42,8 @@ TypeError& TypeError::operator<< (const std::string& string) {
   return *this;
 }
 
-void TypeError::Raise() {
-  CurrentIsolate()->ThrowException(v8::Exception::TypeError(
-base::String::New(message())));
+Object TypeError::Create() {
+  return v8::Exception::TypeError(base::String::New(message()))->ToObject();
 }
 
 ReferenceError::ReferenceError(std::string message)
@@ -52,9 +55,9 @@ ReferenceError& ReferenceError::operator<< (const std::string& string) {
   return *this;
 }
 
-void ReferenceError::Raise() {
-  CurrentIsolate()->ThrowException(v8::Exception::ReferenceError(
-      base::String::New(message())));
+Object ReferenceError::Create() {
+  return v8::Exception::ReferenceError(
+      base::String::New(message()))->ToObject();
 }
 
 SyntaxError::SyntaxError(std::string message)
@@ -66,9 +69,8 @@ SyntaxError& SyntaxError::operator<< (const std::string& string) {
   return *this;
 }
 
-void SyntaxError::Raise() {
-  CurrentIsolate()->ThrowException(v8::Exception::SyntaxError(
-      base::String::New(message())));
+Object SyntaxError::Create() {
+  return v8::Exception::SyntaxError(base::String::New(message()))->ToObject();
 }
 
 RangeError::RangeError(std::string message)
@@ -80,9 +82,8 @@ RangeError& RangeError::operator<< (const std::string& string) {
   return *this;
 }
 
-void RangeError::Raise() {
-  CurrentIsolate()->ThrowException(v8::Exception::RangeError(
-      base::String::New(message())));
+Object RangeError::Create() {
+  return v8::Exception::RangeError(base::String::New(message()))->ToObject();
 }
 
 CustomError::CustomError(std::string name)
@@ -94,14 +95,9 @@ CustomError::CustomError(std::string name, std::string message)
     , name_(name) {
 }
 
-void CustomError::Raise() {
-  CurrentIsolate()->ThrowException(Create());
-}
-
-v8::Local<v8::Object> CustomError::Create() {
-  v8::Local<v8::Object> error(v8::Exception::Error(
-      base::String::New(message()))->ToObject());
-  error->Set(base::String::New("name"), base::String::New(name_));
+Object CustomError::Create() {
+  Object error(v8::Exception::Error(base::String::New(message()))->ToObject());
+  error.Put("name", name_);
   return error;
 }
 

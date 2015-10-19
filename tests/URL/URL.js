@@ -122,8 +122,47 @@ test([
       assertEquals("DELETE", response.method);
       assertEquals("text/plain", response.headers["Content-Type"]);
     })
-  }
+  },
 
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+      var functions = [URL.get, URL.put, URL.post];
+      var path = this.prefix + "/error";
+        functions.forEach(function (func, index) {
+        try {
+          var args = [path];
+          // get does not need additional parameter
+          if (index !== 0) {
+            args.push("");
+          }
+          func.apply(null, args);
+          assertNotReached();
+        } catch (error) {
+          assertEquals(error.name, "URLError");
+          assertEquals(error.message, "request failed");
+          assertEquals(typeof error.request, "object");
+          assertEquals(error.request.statusLine, "HTTP/1.0 404 Not Found");
+          assertEquals(error.request.statusCode, 404);
+        }
+      });
+    });
+  },
+
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+      try {
+        URL.get(this.prefix + "/invalid_status_code");
+        assertNotReached();
+      } catch (error) {
+        assertEquals(error.name, "URLError");
+        assertEquals(error.message, "request failed");
+        assertEquals(typeof error.request, "object");
+        assertEquals(error.request.statusLine, "HTTP/1.0 dead Not Found");
+      };
+    });
+  }
 ]);
 
 endScope();

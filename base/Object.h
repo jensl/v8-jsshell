@@ -48,6 +48,7 @@ class Object {
   };
 
   Object();
+  Object(const Object& object);
 
   template <typename Type>
   Object(v8::Handle<Type> object);

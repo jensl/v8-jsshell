@@ -62,6 +62,10 @@ void Object::Persistent::Release() {
 Object::Object() {
 }
 
+Object::Object(const Object& object)
+    : handle_(object.handle()) {
+}
+
 Object Object::Create() {
   return v8::Object::New(CurrentIsolate());
 }

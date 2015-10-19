@@ -33,6 +33,8 @@ class Request : public api::Class {
 
   Request();
 
+  Instance* New(std::string method, std::string url);
+
   static std::string get(std::string url, const utilities::Options& options);
   static std::string post(std::string url, std::string data,
                           const utilities::Options& options);
@@ -40,7 +42,8 @@ class Request : public api::Class {
                          const utilities::Options& options);
   static std::string del(std::string url, const utilities::Options& options);
 
-  static std::string doOperation(std::string url, std::string method, std::string data,
+  static std::string doOperation(std::string method, std::string url,
+                                 std::string data,
                                  const utilities::Options& options);
 
   static Request* FromContext(
@@ -58,6 +61,7 @@ class Request : public api::Class {
   static void perform(Instance* instance);
 
   static std::string get_statusLine(Instance* instance);
+  static int get_statusCode(Instance* instance);
   static base::Object get_responseHeaders(Instance* instance);
   static builtin::Bytes::Value get_responseBody(Instance* instance);
 
@@ -66,6 +70,18 @@ class Request : public api::Class {
 };
 
 }
+}
+
+namespace conversions {
+
+using namespace modules::url;
+
+template <>
+Request::Instance* as_value(const base::Variant& value, Request::Instance**);
+
+template <>
+base::Variant as_result(Request::Instance* result);
+
 }
 
 #endif // MODULES_URL_REQUEST_H

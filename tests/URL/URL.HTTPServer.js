@@ -94,6 +94,12 @@ HTTPServer.prototype.start = function () {
       client.send("HTTP/1.0 401 Who are you?\r\n");
       client.send("WWW-Authenticate: Basic realm=\"secret\"\r\n");
       client.send("\r\n");
+    } else if (url == "/error") {
+      client.send("HTTP/1.0 404 Not Found\r\n");
+      client.send("\r\n");
+    } else if (url == "/invalid_status_code") {
+      client.send("HTTP/1.0 dead Not Found\r\n");
+      client.send("\r\n");
     } else {
       client.send("HTTP/1.0 200 OK\r\n");
       client.send("Content-Type: text/json\r\n");
