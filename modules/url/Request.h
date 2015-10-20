@@ -59,6 +59,7 @@ class Request : public api::Class {
                                std::string value);
   static void setRequestBody(Instance* instance,
                              builtin::Bytes::Value value);
+  static void setVerifyPeer(Instance* instance, bool value);
   static void perform(Instance* instance);
 
   static std::string get_statusLine(Instance* instance);

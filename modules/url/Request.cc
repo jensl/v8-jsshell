@@ -38,6 +38,7 @@ class Request::Instance : public api::Class::Instance<Request> {
       : method(method)
       , url(url)
       , auth_method(CURLAUTH_NONE)
+      , verify_peer(true)
       , performed(false)
       , status_code(0) {
   }
@@ -48,6 +49,7 @@ class Request::Instance : public api::Class::Instance<Request> {
   std::string username;
   std::string password;
   long auth_method;
+  bool verify_peer;
   std::string request_body;
   size_t request_body_sent;
   bool performed;
@@ -138,6 +140,7 @@ Request::Request()
   AddMethod<Request>("setCredentials", &setCredentials);
   AddMethod<Request>("setRequestHeader", &setRequestHeader);
   AddMethod<Request>("setRequestBody", &setRequestBody);
+  AddMethod<Request>("setVerifyPeer", &setVerifyPeer);
   AddMethod<Request>("perform", &perform);
 
   AddProperty<Request>("statusLine", &get_statusLine);
@@ -231,6 +234,13 @@ void Request::setRequestBody(Instance* instance,
   instance->request_body_sent = 0;
 }
 
+void Request::setVerifyPeer(Instance* instance, bool value) {
+  if (instance->performed)
+    throw URLError("request already performed");
+
+  instance->verify_peer = value;
+}
+
 void Request::perform(Instance* instance) {
   if (instance->performed)
     throw URLError("request already performed");
@@ -278,7 +288,9 @@ void Request::perform(Instance* instance) {
   curl_easy_setopt(curl_handle, CURLOPT_HEADERDATA, instance);
   curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, &WriteFunction);
   curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, instance);
-  curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
+
+  if (!instance->verify_peer)
+    curl_easy_setopt(curl_handle, CURLOPT_SSL_VERIFYPEER, 0);
 
   if (instance->username.length() && instance->password.length()) {
     std::string userpass = instance->username + ":" + instance->password;
@@ -368,6 +380,9 @@ void Request::HandleOptions(Instance* instance,
     for (auto iter(headers.begin()); iter != headers.end(); ++iter)
       setRequestHeader(instance, iter->first, headers.GetString(iter->first));
   }
+
+  if (options.Has("verify_peer"))
+    setVerifyPeer(instance, options.GetBoolean("verify_peer"));
 }
 
 }
