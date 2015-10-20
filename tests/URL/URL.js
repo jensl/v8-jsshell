@@ -22,6 +22,12 @@ Module.load("URL.HTTPServer.js");
 
 setScope("URL");
 
+var BASIC_AUTHORIZATION = "Basic Zm9vOmJhcg==";
+var DIGEST_AUTHORIZATION = ("Digest username=\"foo\", realm=\"secret\", " +
+                            "nonce=\"nonce\", uri=\"/secret/digest\", " +
+                            "response=\"cb75004da065a628f4d291ad1e1ec325\", " +
+                            "opaque=\"opaque\"");
+
 test([
   function () {
     scoped(new HTTPServer, function () {
@@ -76,10 +82,34 @@ test([
     scoped(new HTTPServer, function () {
       this.start();
 
-      var response = JSON.parse(URL.get(this.prefix + "/secret",
+      var response = JSON.parse(URL.get(this.prefix + "/secret/basic",
                                         { username: "foo", password: "bar" }));
 
-      assertEquals("Basic Zm9vOmJhcg==", response.headers["Authorization"]);
+      assertEquals(BASIC_AUTHORIZATION, response.headers["Authorization"]);
+    });
+  },
+
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+
+      var response = JSON.parse(URL.get(this.prefix + "/secret/digest",
+                                        { username: "foo", password: "bar",
+                                          authentication_method: "digest" }));
+
+      assertEquals(DIGEST_AUTHORIZATION, response.headers["Authorization"]);
+    });
+  },
+
+  function () {
+    scoped(new HTTPServer, function () {
+      this.start();
+
+      var response = JSON.parse(URL.get(this.prefix + "/secret/basic",
+                                        { username: "foo", password: "bar",
+                                          authentication_method: "basic" }));
+
+      assertEquals(BASIC_AUTHORIZATION, response.headers["Authorization"]);
     });
   },
 

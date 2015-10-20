@@ -53,7 +53,8 @@ class Request : public api::Class {
   static Instance* constructor(Request*, std::string method, std::string url);
 
   static void setCredentials(Instance* instance, std::string username,
-                             std::string password);
+                             std::string password,
+                             Optional<std::string> method);
   static void setRequestHeader(Instance* instance, std::string name,
                                std::string value);
   static void setRequestBody(Instance* instance,

@@ -37,6 +37,7 @@ class Request::Instance : public api::Class::Instance<Request> {
   Instance(std::string method, std::string url)
       : method(method)
       , url(url)
+      , auth_method(CURLAUTH_NONE)
       , performed(false)
       , status_code(0) {
   }
@@ -46,6 +47,7 @@ class Request::Instance : public api::Class::Instance<Request> {
   std::vector<std::pair<std::string, std::string>> request_headers;
   std::string username;
   std::string password;
+  long auth_method;
   std::string request_body;
   size_t request_body_sent;
   bool performed;
@@ -195,9 +197,23 @@ Request::Instance* Request::constructor(Request*, std::string method,
 }
 
 void Request::setCredentials(Instance* instance, std::string username,
-                             std::string password) {
+                             std::string password,
+                             Optional<std::string> method) {
   instance->username = username;
   instance->password = password;
+
+  if (method.specified()) {
+    if (method.value() == "basic")
+      instance->auth_method = CURLAUTH_BASIC;
+    else if (method.value() == "digest")
+      instance->auth_method = CURLAUTH_DIGEST;
+    else if (method.value() == "any")
+      instance->auth_method = CURLAUTH_ANY;
+    else
+      throw URLError("invalid authentication method: ") << method.value();
+  } else {
+    instance->auth_method = CURLAUTH_ANY;
+  }
 }
 
 void Request::setRequestHeader(Instance* instance, std::string name,
@@ -267,7 +283,7 @@ void Request::perform(Instance* instance) {
   if (instance->username.length() && instance->password.length()) {
     std::string userpass = instance->username + ":" + instance->password;
 
-    curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+    curl_easy_setopt(curl_handle, CURLOPT_HTTPAUTH, instance->auth_method);
     curl_easy_setopt(curl_handle, CURLOPT_USERPWD, userpass.c_str());
   }
 
@@ -342,7 +358,8 @@ void Request::HandleOptions(Instance* instance,
                             const utilities::Options& options) {
   if (options.Has("username") && options.Has("password")) {
     setCredentials(instance, options.GetString("username"),
-                   options.GetString("password"));
+                   options.GetString("password"),
+                   options.GetString("authentication_method", "any"));
   }
 
   if (options.Has("headers")) {
