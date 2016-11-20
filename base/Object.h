@@ -74,10 +74,11 @@ class Object {
   Variant Get(std::string name);
   Variant Get(std::uint32_t index);
 
-  void Put(std::string name, const Variant& value,
-           unsigned flags = PropertyFlags::kAll);
-  void Put(std::uint32_t index, const Variant& value,
-           unsigned flags = PropertyFlags::kAll);
+  void Put(std::string name, const Variant& value);
+  void Put(std::uint32_t index, const Variant& value);
+
+  void DefineOwnProperty(std::string, const Variant& value,
+                         unsigned flags = PropertyFlags::kAll);
 
   std::vector<std::string> GetPropertyNames();
   std::vector<std::string> GetOwnPropertyNames();
@@ -91,7 +92,7 @@ class Object {
   Variant Call(std::string method,
                const std::vector<Variant>& arguments = std::vector<Variant>());
 
-  v8::Handle<v8::Object> handle() const { return handle_; }
+  v8::Local<v8::Object> handle() const { return handle_; }
 
   template <typename ValueType>
   static Object FromMap(const std::map<std::string, ValueType>& map,

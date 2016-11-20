@@ -67,7 +67,7 @@ class WrapperBase {
 
 template <typename Owner, typename Callback>
 v8::Handle<v8::Value> WrapperBase<Owner, Callback>::Data() {
-  return v8::External::New(v8::Isolate::GetCurrent(), this);
+  return v8::External::New(CurrentIsolate(), this);
 }
 
 }

@@ -36,13 +36,13 @@ Object::Object(v8::Local<Type> handle)
 
 template <typename Type>
 Object::Object(const v8::Persistent<Type>& handle)
-    : handle_(v8::Local<v8::Object>::New(v8::Isolate::GetCurrent(), handle)) {
+    : handle_(v8::Local<v8::Object>::New(CurrentIsolate(), handle)) {
 }
 
 template <typename ValueType>
 Object Object::FromMap(const std::map<std::string, ValueType>& map,
                       unsigned flags) {
-  Object object(v8::Object::New());
+  Object object(v8::Object::New(CurrentIsolate()));
 
   typename std::map<std::string, ValueType>::const_iterator iter(map.begin());
 
@@ -58,7 +58,7 @@ template <typename ValueType>
 std::map<std::string, ValueType> Object::ToMap(Object object) {
   std::map<std::string, ValueType> map;
 
-  v8::Handle<v8::Array> names(object.handle()->GetPropertyNames());
+  v8::Local<v8::Array> names(object.handle()->GetPropertyNames());
   std::uint32_t length = names->Length();
 
   for (std::uint32_t index = 0; index < length; ++index) {

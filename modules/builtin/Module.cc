@@ -149,7 +149,7 @@ Module::Instance::Instance(const Features& features)
     , testing(NULL)
     , features(std::map<std::string, bool>(features.begin(), features.end())) {
 
-  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
+  v8::HandleScope handle_scope(CurrentIsolate());
   runtime.Start();
   api::Runtime::Select select(runtime);
 
@@ -241,8 +241,7 @@ Module::Module()
 }
 
 Module::Instance* Module::GetInstance() {
-  v8::Local<v8::Context> context =
-      v8::Isolate::GetCurrent()->GetCurrentContext();
+  v8::Local<v8::Context> context = CurrentIsolate()->GetCurrentContext();
   base::Object object(base::Variant(
       context->GetEmbedderData(kModuleObject)).AsObject());
 

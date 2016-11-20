@@ -24,7 +24,8 @@ namespace glue {
 
 void FunctionGlue::AddTo(std::string name, base::Object target) {
   v8::Handle<v8::Object> function =
-      v8::FunctionTemplate::New(invocation_callback_, data_)->GetFunction();
+      v8::FunctionTemplate::New(
+          CurrentIsolate(), invocation_callback_, data_)->GetFunction();
   target.Put(name, function);
 }
 

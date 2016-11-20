@@ -57,19 +57,18 @@ class Class {
 
    protected:
     v8::Local<v8::Object> object() {
-      return v8::Local<v8::Object>::New(v8::Isolate::GetCurrent(), object_);
+      return v8::Local<v8::Object>::New(CurrentIsolate(), object_);
     }
 
     v8::Persistent<v8::Object> object_;
 
    private:
     static void CleanUp(
-        const v8::WeakCallbackData<v8::Object,
-                                   Class::Instance<ActualClass> >&);
+        const v8::WeakCallbackInfo<Class::Instance<ActualClass>*>&);
   };
 
   v8::Local<v8::Context> context() {
-    return v8::Local<v8::Context>::New(v8::Isolate::GetCurrent(), context_);
+    return v8::Local<v8::Context>::New(CurrentIsolate(), context_);
   }
 
   bool HasInstance(base::Object object);
@@ -135,7 +134,7 @@ class Class {
 
   v8::Local<v8::FunctionTemplate> function_template() {
     return v8::Local<v8::FunctionTemplate>::New(
-        v8::Isolate::GetCurrent(), template_);
+        CurrentIsolate(), template_);
   }
 
   v8::Persistent<v8::Context> context_;
@@ -150,7 +149,7 @@ Class::Instance<ActualClass>::~Instance() {
 template <typename ActualClass>
 void Class::Instance<ActualClass>::CreateObject(ActualClass* cls) {
   static_cast<Class*>(cls)->NewInstance(
-      { v8::External::New(v8::Isolate::GetCurrent(), this) });
+      { v8::External::New(CurrentIsolate(), this) });
 }
 
 template <typename ActualClass>
@@ -164,8 +163,8 @@ base::Object Class::Instance<ActualClass>::GetObject() {
 
 template <typename ActualClass>
 void Class::Instance<ActualClass>::SetObject(base::Object object) {
-  object_.Reset(v8::Isolate::GetCurrent(), object.handle());
-  object_.SetWeak(this, &CleanUp);
+  object_.Reset(CurrentIsolate(), object.handle());
+  object_.SetWeak(this, &CleanUp, v8::WeakCallbackType::kParameter);
 }
 
 template <typename ActualClass>
@@ -175,11 +174,9 @@ ActualClass* Class::Instance<ActualClass>::GetClass() {
 
 template <typename ActualClass>
 void Class::Instance<ActualClass>::CleanUp(
-    const v8::WeakCallbackData<v8::Object,
-                               Class::Instance<ActualClass> >& info) {
-  Class::Instance<ActualClass>* instance = info.GetParameter();
-  instance->object_.Reset();
-  delete instance;
+    const v8::WeakCallbackInfo<Class::Instance<ActualClass>*>& data) {
+  data.GetParameter()->object_.Reset();
+  delete data.GetParameter();
 }
 
 template <typename ActualClass>
@@ -289,11 +286,11 @@ void Class::AddProperty(std::string name,
           Data(),
           v8::DEFAULT,
           setter_ ? v8::None : v8::ReadOnly,
-          v8::AccessorSignature::New(v8::Isolate::GetCurrent(), target));
+          v8::AccessorSignature::New(CurrentIsolate(), target));
     }
 
     v8::Handle<v8::Value> Data() {
-      return v8::External::New(v8::Isolate::GetCurrent(), this);
+      return v8::External::New(CurrentIsolate(), this);
     }
 
    private:
@@ -421,7 +418,7 @@ void Class::AddNamedHandler(
     }
 
     v8::Handle<v8::Value> Data() {
-      return v8::External::New(v8::Isolate::GetCurrent(), this);
+      return v8::External::New(CurrentIsolate(), this);
     }
 
    private:
@@ -523,7 +520,7 @@ void Class::AddIndexedHandler(
     }
 
     v8::Handle<v8::Value> Data() {
-      return v8::External::New(v8::Isolate::GetCurrent(), this);
+      return v8::External::New(CurrentIsolate(), this);
     }
 
    private:
@@ -574,7 +571,7 @@ void Class::AddClassProperty(std::string name,
     }
 
     v8::Handle<v8::Value> Data() {
-      return v8::External::New(v8::Isolate::GetCurrent(), this);
+      return v8::External::New(CurrentIsolate(), this);
     }
 
    private:
@@ -593,7 +590,7 @@ void Class::AddClassProperty(std::string name,
 
 template <typename ActualClass>
 void Class::ConstructObject(typename ActualClass::Instance* instance) {
-  NewInstance({ v8::External::New(v8::Isolate::GetCurrent(), instance) });
+  NewInstance({ v8::External::New(CurrentIsolate(), instance) });
 }
 
 }

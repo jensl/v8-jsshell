@@ -50,7 +50,7 @@ namespace {
 
 void* zalloc(void* opaque, uInt items, uInt size) {
   size_t nbytes = items * size;
-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(
       static_cast<intptr_t>(nbytes));
   size_t* memory = static_cast<size_t*>(malloc(sizeof nbytes + nbytes));
   memory[0] = nbytes;
@@ -60,7 +60,7 @@ void* zalloc(void* opaque, uInt items, uInt size) {
 void zfree(void*, void* address) {
   size_t* memory = static_cast<size_t*>(address);
   size_t nbytes = memory[-1];
-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(
       -static_cast<intptr_t>(nbytes));
   return free(&memory[-1]);
 }

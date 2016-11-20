@@ -22,6 +22,26 @@
 
 extern void stop();
 
+#include "v8.h"
+
+inline v8::Isolate* CurrentIsolate() {
+  return v8::Isolate::GetCurrent();
+}
+
+inline v8::Local<v8::Context> CurrentContext() {
+  return CurrentIsolate()->GetCurrentContext();
+}
+
+template<typename T>
+inline void Check(v8::Maybe<T> value) {
+  value.ToChecked();
+}
+
+template<typename T>
+inline void Check(v8::MaybeLocal<T> value) {
+  value.ToLocalChecked();
+}
+
 #include "base/PropertyFlags.h"
 #include "base/Variant.h"
 #include "base/Object.h"

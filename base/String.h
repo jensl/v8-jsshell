@@ -20,17 +20,42 @@
 #ifndef BASE_STRING_H
 #define BASE_STRING_H
 
-#include "v8.h"
-
 namespace base {
 
 class String {
 public:
+  String(std::string&& value)
+      : value_(value) {
+  }
+  String(std::string value)
+      : value_(value) {
+  }
+
+  v8::Local<v8::String> ToV8() const {
+    return v8::String::NewFromUtf8(CurrentIsolate(), value_.data(),
+                                   v8::String::kNormalString, value_.size());
+  }
+
+  operator v8::Local<v8::String>() const {
+    return ToV8();
+  }
+
   static v8::Local<v8::String> New(const char* data, int length = -1) {
     return v8::String::NewFromUtf8(
-        v8::Isolate::GetCurrent(), data, v8::String::kNormalString, length);
+        CurrentIsolate(), data, v8::String::kNormalString, length);
   }
+
+ private:
+  std::string value_;
 };
+
+inline v8::Local<v8::Symbol> Symbol(std::string name) {
+  return v8::Symbol::ForApi(CurrentIsolate(), String(name));
+}
+
+inline v8::Local<v8::Private> Private(std::string name) {
+  return v8::Private::ForApi(CurrentIsolate(), String(name));
+}
 
 }
 

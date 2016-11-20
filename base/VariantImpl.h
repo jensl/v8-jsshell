@@ -30,11 +30,6 @@ Variant::Variant(Value value)
 }
 
 template <typename Type>
-Variant::Variant(v8::Handle<Type> handle)
-    : handle_(handle) {
-}
-
-template <typename Type>
 Variant::Variant(v8::Local<Type> handle)
     : handle_(handle) {
 }

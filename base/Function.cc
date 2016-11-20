@@ -29,17 +29,17 @@ Function::Function(base::Object object)
 
 Variant Function::Call(Object this_object_in,
                        const std::vector<Variant>& arguments_in) {
-  v8::EscapableHandleScope handle_scope(v8::Isolate::GetCurrent());
+  v8::EscapableHandleScope handle_scope(CurrentIsolate());
   v8::Local<v8::Object> this_object;
 
   if (this_object_in.IsEmpty())
-    this_object = v8::Isolate::GetCurrent()->GetCurrentContext()->Global();
+    this_object = CurrentContext()->Global();
   else
     this_object = this_object_in.handle();
 
   v8::Local<v8::Function> function(object_.handle().As<v8::Function>());
 
-  std::vector<v8::Handle<v8::Value>> arguments;
+  std::vector<v8::Local<v8::Value>> arguments;
 
   for (std::vector<Variant>::const_iterator iter = arguments_in.begin();
        iter != arguments_in.end();

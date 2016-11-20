@@ -128,7 +128,7 @@ Row::Instance* as_value(const base::Variant& value, Row::Instance**) {
 template <>
 base::Variant as_result(Row::Instance* result) {
   if (!result)
-    return v8::Null(v8::Isolate::GetCurrent());
+    return v8::Null(CurrentIsolate());
   return result->GetObject().handle();
 }
 

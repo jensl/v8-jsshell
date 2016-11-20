@@ -18,10 +18,11 @@
 */
 
 #include "Base.h"
+#include "Primitive.h"
 
 namespace {
 
-v8::Handle<v8::String> ToString(std::string value) {
+v8::Local<v8::String> ToString(std::string value) {
   return base::String::New(value.c_str(), value.length());
 }
 
@@ -33,11 +34,11 @@ Object::Persistent::Persistent() {
 }
 
 Object::Persistent::Persistent(const Persistent& other)
-    : handle_(v8::Isolate::GetCurrent(), other.handle_) {
+    : handle_(CurrentIsolate(), other.handle_) {
 }
 
 Object::Persistent::Persistent(const Object& object)
-    : handle_(v8::Isolate::GetCurrent(), object.handle_) {
+    : handle_(CurrentIsolate(), object.handle_) {
 }
 
 Object::Persistent::~Persistent() {
@@ -45,12 +46,12 @@ Object::Persistent::~Persistent() {
 }
 
 Object::Persistent& Object::Persistent::operator= (const Persistent& other) {
-  handle_.Reset(v8::Isolate::GetCurrent(), other.handle_);
+  handle_.Reset(CurrentIsolate(), other.handle_);
   return *this;
 }
 
 Object::Persistent& Object::Persistent::operator= (const Object& object) {
-  handle_.Reset(v8::Isolate::GetCurrent(), object.handle_);
+  handle_.Reset(CurrentIsolate(), object.handle_);
   return *this;
 }
 
@@ -70,7 +71,7 @@ Object::Object() {
 }
 
 Object Object::Create() {
-  return v8::Object::New(v8::Isolate::GetCurrent());
+  return v8::Object::New(CurrentIsolate());
 }
 
 bool Object::IsEmpty() {
@@ -121,7 +122,7 @@ unsigned ConvertPropertyAttributes(v8::PropertyAttribute attributes) {
 
 unsigned Object::GetPropertyFlags(std::string name) {
   if (HasProperty(name)) {
-    v8::Handle<v8::Value> key(base::String::New(name.c_str(), name.length()));
+    v8::Local<v8::Value> key(base::String::New(name.c_str(), name.length()));
     v8::PropertyAttribute attributes = handle_->GetPropertyAttributes(key);
     return ConvertPropertyAttributes(attributes);
   } else {
@@ -131,7 +132,7 @@ unsigned Object::GetPropertyFlags(std::string name) {
 
 unsigned Object::GetPropertyFlags(std::uint32_t name) {
   if (HasProperty(name)) {
-    v8::Handle<v8::Value> key(v8::Integer::New(v8::Isolate::GetCurrent(), name));
+    v8::Local<v8::Value> key(v8::Integer::New(CurrentIsolate(), name));
     v8::PropertyAttribute attributes = handle_->GetPropertyAttributes(key);
     return ConvertPropertyAttributes(attributes);
   } else {
@@ -147,13 +148,18 @@ Variant Object::Get(std::uint32_t index) {
   return handle_->Get(index);
 }
 
-void Object::Put(std::string name, const Variant& value, unsigned flags) {
-  handle_->Set(ToString(name), value.handle_, ConvertPropertyFlags(flags));
+void Object::Put(std::string name, const Variant& value) {
+  Check(handle_->Set(CurrentContext(), String::New(name), value.handle_));
 }
 
-void Object::Put(std::uint32_t index, const Variant& value, unsigned flags) {
-  handle_->Set(v8::Integer::NewFromUnsigned(index), value.handle_,
-               ConvertPropertyFlags(flags));
+void Object::Put(std::uint32_t index, const Variant& value) {
+  Check(handle_->Set(CurrentContext(), Primitive::New(index), value.handle_));
+}
+
+void Object::DefineOwnProperty(std::string name, const Variant& value,
+                               unsigned flags) {
+  Check(handle_->DefineOwnProperty(CurrentContext(), String::New(name),
+                                   value.handle_, ConvertPropertyFlags(flags)));
 }
 
 namespace {
@@ -180,15 +186,15 @@ std::vector<std::string> Object::GetOwnPropertyNames() {
 }
 
 bool Object::HasHidden(std::string name) {
-  return !handle_->GetHiddenValue(ToString(name)).IsEmpty();
+  return handle_->HasPrivate(CurrentContext(), Private(name)).ToChecked();
 }
 
 Variant Object::GetHidden(std::string name) {
-  return handle_->GetHiddenValue(ToString(name));
+  return handle_->GetPrivate(CurrentContext(), Private(name)).ToLocalChecked();
 }
 
 void Object::PutHidden(std::string name, const Variant& value) {
-  handle_->SetHiddenValue(ToString(name), value.handle_);
+  Check(handle_->SetPrivate(CurrentContext(), Private(name), value.handle()));
 }
 
 Variant Object::Call(std::string method,

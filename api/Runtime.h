@@ -42,7 +42,7 @@ class Runtime {
   base::Object GetGlobalObject();
 
   v8::Handle<v8::Context> context() {
-    return v8::Local<v8::Context>::New(v8::Isolate::GetCurrent(), context_);
+    return v8::Local<v8::Context>::New(CurrentIsolate(), context_);
   }
 
  private:

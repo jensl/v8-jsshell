@@ -59,7 +59,7 @@ class Module {
 
   v8::Local<v8::FunctionTemplate> function_template() {
     return v8::Local<v8::FunctionTemplate>::New(
-      v8::Isolate::GetCurrent(), template_);
+      CurrentIsolate(), template_);
   }
 
   v8::Persistent<v8::FunctionTemplate> template_;
@@ -68,7 +68,7 @@ class Module {
 template <typename ActualModule>
 ActualModule* Module::FromContext(int index, v8::Handle<v8::Context> context) {
   if (context.IsEmpty())
-    context = v8::Isolate::GetCurrent()->GetCurrentContext();
+    context = CurrentIsolate()->GetCurrentContext();
   return static_cast<ActualModule*>(static_cast<Module*>(
       v8::External::Cast(*context->GetEmbedderData(index))->Value()));
 }

@@ -14,8 +14,14 @@
 
 ifeq ($(postgresql),yes)
 
-postgresql_major = $(shell pg_config --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)/\\1/")
-postgresql_minor = $(shell pg_config --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)/\\2/")
+ifeq ($(use_sysroot),yes)
+pg_config ?= $(sysroot)/usr/bin/pg_config
+else
+pg_config ?= pg_config
+endif
+
+postgresql_major = $(shell $(pg_config) --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)/\\1/")
+postgresql_minor = $(shell $(pg_config) --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)/\\2/")
 
 common_sources += modules/postgresql/Connection.cc \
                   modules/postgresql/Statement.cc \
@@ -28,8 +34,10 @@ common_sources += modules/postgresql/Connection.cc \
 defines += POSTGRESQL_SUPPORT=1 \
            POSTGRESQL_MAJOR=$(postgresql_major) \
            POSTGRESQL_MINOR=$(postgresql_minor)
-include_paths += $(shell pg_config --includedir)
-library_paths += $(filter-out /lib /usr/lib /usr/local/lib,$(shell pg_config --libdir))
+pg_include_paths = $(shell $(pg_config) --includedir)
+pg_library_paths = $(filter-out /lib /usr/lib /usr/local/lib,$(shell $(pg_config) --libdir))
+include_paths += $(pg_include_paths:%=$(sysroot)%)
+library_paths += $(pg_library_paths:%=$(sysroot)%)
 libraries += pq
 
 endif

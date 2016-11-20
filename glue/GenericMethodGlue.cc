@@ -18,32 +18,16 @@
 */
 
 #include "Base.h"
-#include "api/Runtime.h"
+#include "glue/GenericMethodGlue.h"
 
-#include "v8.h"
+namespace glue {
 
-namespace api {
-
-Runtime::Select::Select(Runtime& runtime)
-    : context_scope_(runtime.context()) {
-}
-
-Runtime::~Runtime() {
-  Stop();
-}
-
-void Runtime::Start() {
-  v8::HandleScope handle_scope(CurrentIsolate());
-  context_.Reset(CurrentIsolate(),
-                 v8::Context::New(CurrentIsolate()));
-}
-
-void Runtime::Stop() {
-  context_.Reset();
-}
-
-base::Object Runtime::GetGlobalObject() {
-  return context()->Global();
+void GenericMethodGlue::AddTo(std::string name,
+                              v8::Handle<v8::Template> target) {
+  v8::Handle<v8::FunctionTemplate> function =
+      v8::FunctionTemplate::New(
+          v8::Isolate::GetCurrent(), invocation_callback_, data_);
+  target->Set(v8::Isolate::GetCurrent(), name.c_str(), function);
 }
 
 }

@@ -32,8 +32,7 @@ namespace base {
 template <typename ValueType>
 Object Array::FromVector(const std::vector<ValueType>& elements,
                          unsigned flags) {
-  Object array(v8::Array::New(
-      v8::Isolate::GetCurrent(), elements.size()));
+  Object array(v8::Array::New(CurrentIsolate(), elements.size()));
 
   for (std::uint32_t index = 0; index < elements.size(); ++index)
     array.Put(index, AsResult(elements[index]), flags);

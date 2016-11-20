@@ -19,8 +19,6 @@
 
 #include <string>
 
-#include "v8.h"
-
 namespace utilities {
 
 v8::Handle<v8::Script> CompileFile(std::string filename, std::string encoding);

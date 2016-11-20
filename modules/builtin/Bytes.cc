@@ -44,13 +44,12 @@ Bytes::Instance::Instance() {
 
 Bytes::Instance::Instance(std::string data)
     : data(data) {
-  v8::Isolate::GetCurrent()
-      ->AdjustAmountOfExternalAllocatedMemory(data.length());
+  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(data.length());
 }
 
 Bytes::Instance::~Instance() {
   int64_t length = -static_cast<intptr_t>(data.length());
-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(length);
+  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(length);
 }
 
 void Bytes::Instance::InitializeObject() {

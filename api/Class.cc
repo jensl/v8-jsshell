@@ -54,9 +54,9 @@ base::Object Class::NewInstance(
 }
 
 Class::Class(std::string name, const glue::ConstructorGlue& constructor)
-    : context_(v8::Isolate::GetCurrent(),
-               v8::Isolate::GetCurrent()->GetEnteredContext())
-    , template_(v8::Isolate::GetCurrent(), v8::FunctionTemplate::New())
+    : context_(CurrentIsolate(),
+               CurrentIsolate()->GetEnteredContext())
+    , template_(CurrentIsolate(), v8::FunctionTemplate::New(CurrentIsolate()))
     , name_(name) {
   function_template()->SetClassName(
       base::String::New(name.c_str(), name.length()));

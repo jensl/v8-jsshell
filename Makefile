@@ -15,10 +15,9 @@
 -include user.mk
 
 standard ?= c++11
-compiler ?= g++
-linker ?= $(compiler)
 debug ?= no
 v8static ?= no
+out ?= out
 
 ifeq ($(debug),yes)
 cflags ?= -g
@@ -26,23 +25,21 @@ else
 cflags ?= -O2
 endif
 
+targets = $(out)/jsshell test-jsshell
+all: $(targets)
+
+include v8.mk
+
 components = base conversions glue api utilities modules jsshell
 fragments = $(components:%=%/sources.mk)
 
 include $(fragments)
 
-out = out
-
 common_objects = $(common_sources:%.cc=$(out)/obj/%.o)
 jsshell_objects = $(jsshell_sources:%.cc=$(out)/obj/%.o)
 objects = $(common_objects) $(jsshell_objects)
 
-targets = $(out)/jsshell test-jsshell
 makefiles = Makefile user.mk $(fragments)
-
-all: $(targets)
-
-include v8.mk
 
 cflags += -I. $(include_paths:%=-I%) -MMD -Wall -Werror -std=$(standard) $(defines:%=-D%)
 lflags += $(library_paths:%=-L%)
@@ -60,7 +57,7 @@ $(objects): $(out)/obj/%.o: %.cc Makefile user.mk $(fragments)
 $(out)/jsshell: v8 $(common_objects) $(jsshell_objects)
 	@echo LINK\( jsshell \)
 	@mkdir -p $(out)
-	@$(linker) $(lflags) -o $@ $(common_objects) $(jsshell_objects) $(v8objects) $(libraries:%=-l%)
+	@$(linker) $(lflags) -o $@ $(common_objects) $(jsshell_objects) $(v8objects) -Wl,-\( $(libraries:%=-l%) -Wl,-\)
 
 $(out)/.jsshell.tested: $(out)/jsshell $(wildcard tests/*.js)
 	@rm -rf tests/output

@@ -45,12 +45,12 @@ AccountedPGresult::AccountedPGresult(PGresult* result)
 
   size_ = PQntuples(result) * rowsize + varsize;
 
-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(
       static_cast<intptr_t>(size_));
 }
 
 AccountedPGresult::~AccountedPGresult() {
-  v8::Isolate::GetCurrent()->AdjustAmountOfExternalAllocatedMemory(
+  CurrentIsolate()->AdjustAmountOfExternalAllocatedMemory(
       -static_cast<intptr_t>(size_));
   PQclear(result_);
 }
@@ -123,7 +123,7 @@ base::Variant GetField(PGconn* connection, PGresult* result, Types* types,
     case Types::kTIMESTAMP:
     case Types::kTIMESTAMPTZ:
       return base::Variant(v8::Date::New(
-          v8::Isolate::GetCurrent(), GetTimeValue(connection, type, value)));
+          CurrentIsolate(), GetTimeValue(connection, type, value)));
   }
 }
 
@@ -134,7 +134,7 @@ std::vector<base::Variant> ApplyResult(PGconn* connection, PGresult* result,
   for (unsigned row = 0, rows = PQntuples(result);
        row < rows;
        ++row) {
-    v8::EscapableHandleScope handle_scope(v8::Isolate::GetCurrent());
+    v8::EscapableHandleScope handle_scope(CurrentIsolate());
     std::vector<base::Variant> arguments;
 
     for (unsigned field = 0, fields = PQnfields(result);

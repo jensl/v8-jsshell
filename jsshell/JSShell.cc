@@ -129,7 +129,7 @@ int Main(const std::vector<std::string>& argv,
     }
   }
 
-  v8::HandleScope handle_scope(v8::Isolate::GetCurrent());
+  v8::HandleScope handle_scope(CurrentIsolate());
 
   modules::builtin::Module::Instance* root =
       modules::builtin::Module::Root(features);

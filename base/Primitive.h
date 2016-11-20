@@ -1,7 +1,7 @@
 /* -*- mode: c++ -*- */
 /*
 
-  Copyright 2013 Jens Lindström
+  Copyright 2016 Jens Widell
 
   Licensed under the Apache License, Version 2.0 (the "License"); you may not
   use this file except in compliance with the License.  You may obtain a copy of
@@ -17,33 +17,25 @@
 
 */
 
-#include "Base.h"
-#include "api/Runtime.h"
+#ifndef BASE_PRIMITIVE_H
+#define BASE_PRIMITIVE_H
 
 #include "v8.h"
 
-namespace api {
+namespace base {
 
-Runtime::Select::Select(Runtime& runtime)
-    : context_scope_(runtime.context()) {
-}
+class Primitive {
+public:
+  static v8::Local<v8::Integer> New(int32_t value) {
+    return v8::Integer::New(v8::Isolate::GetCurrent(), value);
+  }
 
-Runtime::~Runtime() {
-  Stop();
-}
-
-void Runtime::Start() {
-  v8::HandleScope handle_scope(CurrentIsolate());
-  context_.Reset(CurrentIsolate(),
-                 v8::Context::New(CurrentIsolate()));
-}
-
-void Runtime::Stop() {
-  context_.Reset();
-}
-
-base::Object Runtime::GetGlobalObject() {
-  return context()->Global();
-}
+  static v8::Local<v8::Integer> New(uint32_t value) {
+    return v8::Integer::NewFromUnsigned(v8::Isolate::GetCurrent(), value);
+  }
+};
 
 }
+
+#endif // BASE_CONVERT_H
+

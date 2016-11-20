@@ -17,6 +17,8 @@
 
 */
 
+#include "Base.h"
+
 #include "utilities/CompileFile.h"
 
 #include <unistd.h>
@@ -29,65 +31,65 @@
 
 namespace utilities {
 
-v8::Handle<v8::Script> CompileFile(std::string filename, std::string encoding) {
+v8::Local<v8::Script> CompileFile(std::string filename, std::string encoding) {
   File file(filename, "r");
   std::string raw_source(file.read(encoding));
 
-  std::unique_ptr<v8::ScriptData> precompiled;
-  std::string data_precompiled;
-
-  v8::Handle<v8::String> source(
-      base::String::New(raw_source.c_str(), raw_source.length()));
+  std::unique_ptr<v8::ScriptCompiler::CachedData> cached_data;
+  std::string cached_data_string;
+  std::string filename_cached(filename + "c");
 
   if (filename.length() > 3 &&
       filename.compare(filename.length() - 3, 3, ".js") == 0) {
-    std::string filename_precompiled(filename + "c");
-
     try {
-      File file_precompiled(filename_precompiled, "r");
+      File file_cached(filename_cached, "r");
 
-      if (file.mtime() <= file_precompiled.mtime()) {
-        data_precompiled = file_precompiled.read();
-
-        precompiled.reset(v8::ScriptData::New(
-            data_precompiled.c_str(), data_precompiled.length()));
+      if (file.mtime() <= file_cached.mtime()) {
+        cached_data_string = file_cached.read();
+        cached_data.reset(new v8::ScriptCompiler::CachedData(
+            reinterpret_cast<const uint8_t*>(cached_data_string.data()),
+            cached_data_string.size()));
       }
     } catch (File::Error &) {
       /* Failed to read a *.jsc file.  That's okay, just ignore it. */
     }
+  }
 
-    if (!precompiled) {
-      try {
-        File file_precompiled(filename_precompiled, "w");
+  v8::ScriptOrigin origin(base::String(filename).ToV8());
+  v8::ScriptCompiler::Source source(base::String(raw_source).ToV8(), origin,
+                                    cached_data.release());
+  v8::ScriptCompiler::CompileOptions compile_options;
 
-        precompiled.reset(v8::ScriptData::PreCompile(source));
+  if (cached_data) {
+    compile_options = static_cast<v8::ScriptCompiler::CompileOptions>(
+        v8::ScriptCompiler::kConsumeParserCache);
+  } else {
+    compile_options = static_cast<v8::ScriptCompiler::CompileOptions>(
+        v8::ScriptCompiler::kProduceParserCache);
+  }
 
-        if (precompiled) {
-          file_precompiled.write(
-              std::string(precompiled->Data(), precompiled->Length()));
-        }
-      } catch (File::Error error) {
-        //fprintf(stderr, "Failed to write %s: %s\n", filename.c_str(), error.message().c_str());
+  v8::MaybeLocal<v8::UnboundScript> unbound_script(
+      v8::ScriptCompiler::CompileUnboundScript(
+          CurrentIsolate(), &source, compile_options));
 
-        /* Couldn't open the file for writing.  That's okay, just ignore it. */
-      }
+  if (unbound_script.IsEmpty())
+    return v8::Local<v8::Script>();
+
+  if (!cached_data && source.GetCachedData()) {
+    const v8::ScriptCompiler::CachedData* cached_data = source.GetCachedData();
+
+    try {
+      File file_cached(filename_cached, "w");
+
+      file_cached.write(std::string(
+          reinterpret_cast<const char*>(cached_data->data),
+          cached_data->length));
+    } catch (File::Error error) {
+      /* Couldn't open the file for writing.  That's okay, just ignore it. */
     }
   }
 
-  v8::ScriptOrigin origin(
-      base::String::New(filename.c_str(), filename.length()));
-
-  if (precompiled) {
-    v8::TryCatch try_catch;
-
-    v8::Local<v8::Script> script(
-        v8::Script::New(source, &origin, precompiled.get()));
-
-    if (!try_catch.HasCaught())
-      return script;
-  }
-
-  return v8::Script::New(source, &origin);
+  return unbound_script.ToLocalChecked()->BindToCurrentContext();
 }
 
 }

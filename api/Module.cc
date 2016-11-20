@@ -30,14 +30,14 @@ Module::~Module() {
 Module::Module(int index, std::string name)
     : index_(index)
     , name_(name)
-    , template_(v8::Isolate::GetCurrent(), v8::FunctionTemplate::New()) {
+    , template_(CurrentIsolate(), v8::FunctionTemplate::New(CurrentIsolate())) {
   function_template()->SetClassName(
       base::String::New(name.c_str(), name.length()));
 }
 
 void Module::AddToRuntime(Runtime& runtime) {
   runtime.context()->SetEmbedderData(
-      index_, v8::External::New(v8::Isolate::GetCurrent(), this));
+      index_, v8::External::New(CurrentIsolate(), this));
   ExtendRuntime(runtime);
 }
 

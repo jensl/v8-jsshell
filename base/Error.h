@@ -83,7 +83,7 @@ class CustomError : public Error {
 
   virtual void Raise();
 
-  v8::Handle<v8::Object> Create();
+  v8::Local<v8::Object> Create();
 
  private:
   std::string name_;
@@ -93,12 +93,12 @@ class UncaughtException {
  public:
   UncaughtException(v8::TryCatch& try_catch);
 
-  v8::Handle<v8::Value> exception() { return exception_; }
-  v8::Handle<v8::Message> message() { return message_; }
+  v8::Local<v8::Value> exception() { return exception_; }
+  v8::Local<v8::Message> message() { return message_; }
 
  private:
-  v8::Handle<v8::Value> exception_;
-  v8::Handle<v8::Message> message_;
+  v8::Local<v8::Value> exception_;
+  v8::Local<v8::Message> message_;
 };
 
 /* Thrown when a nested call to the engine results in an exception being thrown.

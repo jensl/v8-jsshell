@@ -39,9 +39,6 @@ class Variant {
   Variant(Value value);
 
   template <typename Type>
-  Variant(v8::Handle<Type> value);
-
-  template <typename Type>
   Variant(v8::Local<Type> value);
 
   bool IsEmpty() const;
@@ -102,13 +99,13 @@ class Variant {
   void SetObject(base::Object value);
 
   const v8::Local<v8::Value> handle() const {
-    return v8::Local<v8::Value>(handle_);
+    return handle_;
   }
 
  private:
   friend class Object;
 
-  v8::Handle<v8::Value> handle_;
+  v8::Local<v8::Value> handle_;
 };
 
 }
