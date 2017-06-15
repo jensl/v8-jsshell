@@ -20,6 +20,7 @@
 #ifndef MODULES_POSTGRESQL_FORMATTER_H
 #define MODULES_POSTGRESQL_FORMATTER_H
 
+#include <list>
 #include <string>
 #include <vector>
 
@@ -46,7 +47,7 @@ class Formatter : public utilities::Formatter {
   void Add(std::string value, bool binary);
   void AddNull();
 
-  std::vector<std::string> values_;
+  std::list<std::string> values_;
   std::vector<const char*> parameters_;
   std::vector<int> lengths_;
   std::vector<int> formats_;
