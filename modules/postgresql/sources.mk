@@ -20,8 +20,8 @@ else
 pg_config ?= pg_config
 endif
 
-postgresql_major = $(shell $(pg_config) --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)/\\1/")
-postgresql_minor = $(shell $(pg_config) --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\)\\.\\([0-9]*\\)/\\2/")
+postgresql_major = $(shell $(pg_config) --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\).*/\\1/")
+postgresql_minor = $(shell $(pg_config) --version | sed -e "s/PostgreSQL \\([0-9]*\\)\\.\\([0-9]*\\).*/\\2/")
 
 common_sources += modules/postgresql/Connection.cc \
                   modules/postgresql/Statement.cc \
